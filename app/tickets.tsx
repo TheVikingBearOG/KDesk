@@ -1,0 +1,520 @@
+import React, { useState, useMemo } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+  Platform,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { Search, AlertCircle, Clock, CheckCircle, Archive } from "lucide-react-native";
+import { trpc } from "@/lib/trpc";
+import type { Ticket, TicketStatus, TicketPriority } from "@/backend/types/ticket";
+
+const FILTERS: { label: string; value: TicketStatus | "all" }[] = [
+  { label: "All", value: "all" },
+  { label: "New", value: "new" },
+  { label: "Open", value: "open" },
+  { label: "Pending", value: "pending" },
+  { label: "Solved", value: "solved" },
+  { label: "Closed", value: "closed" },
+];
+
+const STATUS_COLORS: Record<TicketStatus, string> = {
+  new: "#EF4444",
+  open: "#3B82F6",
+  pending: "#F59E0B",
+  solved: "#10B981",
+  closed: "#6B7280",
+};
+
+const PRIORITY_COLORS: Record<TicketPriority, string> = {
+  low: "#6B7280",
+  normal: "#3B82F6",
+  high: "#EF4444",
+};
+
+export default function TicketsScreen() {
+  const router = useRouter();
+  const [selectedFilter, setSelectedFilter] = useState<TicketStatus | "all">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const ticketsQuery = trpc.tickets.list.useQuery({
+    status: selectedFilter === "all" ? undefined : selectedFilter,
+    search: searchQuery,
+  });
+
+  const stats = useMemo(() => {
+    const tickets = ticketsQuery.data || [];
+    return {
+      new: tickets.filter(t => t.status === "new").length,
+      open: tickets.filter(t => t.status === "open").length,
+      pending: tickets.filter(t => t.status === "pending").length,
+      solved: tickets.filter(t => t.status === "solved").length,
+      closed: tickets.filter(t => t.status === "closed").length,
+    };
+  }, [ticketsQuery.data]);
+
+  const formatTime = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
+  };
+
+  const renderTicket = ({ item }: { item: Ticket }) => (
+    <TouchableOpacity
+      style={styles.ticketCard}
+      onPress={() => router.push(`/ticket/${item.id}`)}
+      activeOpacity={0.7}
+    >
+      <View style={styles.ticketHeader}>
+        <View style={styles.ticketTitleRow}>
+          <Text style={styles.ticketNumber}>#{item.ticketNumber}</Text>
+          <View style={styles.badgeRow}>
+            <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[item.status] }]}>
+              <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
+            </View>
+            {item.priority !== "normal" && (
+              <View style={[styles.priorityBadge, { borderColor: PRIORITY_COLORS[item.priority] }]}>
+                <Text style={[styles.priorityText, { color: PRIORITY_COLORS[item.priority] }]}>
+                  {item.priority.toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+        <Text style={styles.timeAgo}>{formatTime(item.updatedAt)}</Text>
+      </View>
+
+      <Text style={styles.subject} numberOfLines={2}>
+        {item.subject}
+      </Text>
+
+      <View style={styles.ticketMeta}>
+        <Text style={styles.requester}>{item.requesterName}</Text>
+        <Text style={styles.requesterEmail}>{item.requesterEmail}</Text>
+      </View>
+
+      <View style={styles.ticketFooter}>
+        {item.assignedToName ? (
+          <View style={styles.assigneeRow}>
+            <View style={styles.assigneeAvatar}>
+              <Text style={styles.assigneeInitial}>{item.assignedToName[0]}</Text>
+            </View>
+            <Text style={styles.assigneeName}>{item.assignedToName}</Text>
+          </View>
+        ) : (
+          <View style={styles.unassignedRow}>
+            <Text style={styles.unassignedText}>Unassigned</Text>
+          </View>
+        )}
+        {item.departmentName && (
+          <View style={styles.departmentBadge}>
+            <Text style={styles.departmentText}>{item.departmentName}</Text>
+          </View>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+
+  return (
+    <SafeAreaView style={styles.container} edges={Platform.OS === "web" ? [] : ["top"]}>
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.headerTitle}>All Tickets</Text>
+          <Text style={styles.headerSubtitle}>Manage and track support tickets</Text>
+        </View>
+      </View>
+
+      <View style={styles.statsContainer}>
+        <View style={styles.statsRow}>
+          <View style={[styles.statCard, styles.statCardNew]}>
+            <AlertCircle size={20} color="#EF4444" />
+            <Text style={styles.statNumber}>{stats.new}</Text>
+            <Text style={styles.statLabel}>New</Text>
+          </View>
+          <View style={[styles.statCard, styles.statCardOpen]}>
+            <Clock size={20} color="#3B82F6" />
+            <Text style={styles.statNumber}>{stats.open}</Text>
+            <Text style={styles.statLabel}>Open</Text>
+          </View>
+          <View style={[styles.statCard, styles.statCardPending]}>
+            <Clock size={20} color="#F59E0B" />
+            <Text style={styles.statNumber}>{stats.pending}</Text>
+            <Text style={styles.statLabel}>Pending</Text>
+          </View>
+          <View style={[styles.statCard, styles.statCardSolved]}>
+            <CheckCircle size={20} color="#10B981" />
+            <Text style={styles.statNumber}>{stats.solved}</Text>
+            <Text style={styles.statLabel}>Solved</Text>
+          </View>
+          <View style={[styles.statCard, styles.statCardClosed]}>
+            <Archive size={20} color="#6B7280" />
+            <Text style={styles.statNumber}>{stats.closed}</Text>
+            <Text style={styles.statLabel}>Closed</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBar}>
+          <Search size={20} color="#9CA3AF" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search tickets by ID, subject, or email..."
+            placeholderTextColor="#9CA3AF"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+      </View>
+
+      <View style={styles.filtersContainer}>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={FILTERS}
+          keyExtractor={(item) => item.value}
+          contentContainerStyle={styles.filtersList}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[styles.filterChip, selectedFilter === item.value && styles.filterChipActive]}
+              onPress={() => setSelectedFilter(item.value)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.filterText,
+                  selectedFilter === item.value && styles.filterTextActive,
+                ]}
+              >
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          )}
+        />
+      </View>
+
+      {ticketsQuery.isLoading ? (
+        <View style={styles.centerContent}>
+          <ActivityIndicator size="large" color="#3B82F6" />
+        </View>
+      ) : ticketsQuery.error ? (
+        <View style={styles.centerContent}>
+          <Text style={styles.errorText}>Failed to load tickets</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={ticketsQuery.data}
+          keyExtractor={(item) => item.id}
+          renderItem={renderTicket}
+          contentContainerStyle={styles.ticketsList}
+          refreshing={ticketsQuery.isRefetching}
+          onRefresh={() => ticketsQuery.refetch()}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>No tickets found</Text>
+            </View>
+          }
+        />
+      )}
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F9FAFB",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 32,
+    paddingVertical: 24,
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginTop: 4,
+  },
+
+  statsContainer: {
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 32,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  statCardNew: {
+    borderColor: "#FEE2E2",
+    backgroundColor: "#FEF2F2",
+  },
+  statCardOpen: {
+    borderColor: "#DBEAFE",
+    backgroundColor: "#EFF6FF",
+  },
+  statCardPending: {
+    borderColor: "#FEF3C7",
+    backgroundColor: "#FFFBEB",
+  },
+  statCardSolved: {
+    borderColor: "#D1FAE5",
+    backgroundColor: "#F0FDF4",
+  },
+  statCardClosed: {
+    borderColor: "#F3F4F6",
+    backgroundColor: "#F9FAFB",
+  },
+  statNumber: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#111827",
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#6B7280",
+    textTransform: "uppercase",
+  },
+  searchContainer: {
+    paddingHorizontal: 32,
+    paddingVertical: 20,
+    backgroundColor: "#FFFFFF",
+  },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: "#1F2937",
+  },
+  filtersContainer: {
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  filtersList: {
+    paddingHorizontal: 32,
+    gap: 8,
+  },
+  filterChip: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 6,
+    backgroundColor: "#F9FAFB",
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  filterChipActive: {
+    backgroundColor: "#3B82F6",
+    borderColor: "#3B82F6",
+  },
+  filterText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6B7280",
+  },
+  filterTextActive: {
+    color: "#FFFFFF",
+  },
+  ticketsList: {
+    padding: 32,
+    gap: 12,
+  },
+  ticketCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 8,
+    padding: 20,
+    marginBottom: 0,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  ticketHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 12,
+  },
+  ticketTitleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flex: 1,
+  },
+  badgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  ticketNumber: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#3B82F6",
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    letterSpacing: 0.5,
+  },
+  priorityBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    backgroundColor: "#FFFFFF",
+  },
+  priorityText: {
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  timeAgo: {
+    fontSize: 13,
+    color: "#9CA3AF",
+  },
+  subject: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#111827",
+    marginBottom: 12,
+    lineHeight: 22,
+  },
+  ticketMeta: {
+    marginBottom: 8,
+  },
+  requester: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 2,
+  },
+  requesterEmail: {
+    fontSize: 13,
+    color: "#6B7280",
+  },
+  ticketFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+  },
+  assigneeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  unassignedRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  unassignedText: {
+    fontSize: 13,
+    color: "#9CA3AF",
+    fontWeight: "500",
+  },
+  assigneeAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#3B82F6",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  assigneeInitial: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  assigneeName: {
+    fontSize: 13,
+    color: "#374151",
+    fontWeight: "600",
+  },
+  departmentBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+    backgroundColor: "#F3F4F6",
+  },
+  departmentText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#6B7280",
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#EF4444",
+  },
+  emptyState: {
+    paddingVertical: 60,
+    alignItems: "center",
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: "#9CA3AF",
+  },
+});
