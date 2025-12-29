@@ -35,7 +35,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const signIn = async (userId: string, password: string) => {
     const userMap: Record<string, User> = {
       "admin1": { id: "admin1", name: "Admin User", email: "admin@company.com", role: "Administrator" },
-      "tech1": { id: "tech1", name: "Tech Support", email: "tech@company.com", role: "Technician" },
+      "tech1": { id: "tech1", name: "Tech Support", email: "tech@company.com", role: "Staff" },
       "agent1": { id: "agent1", name: "Agent Smith", email: "agent@company.com", role: "Support Agent" },
     };
     

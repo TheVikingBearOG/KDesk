@@ -58,7 +58,7 @@ const mockUsers: TaggableUser[] = [
   {
     id: "user4",
     name: "Mike Tech",
-    role: "Technician",
+    role: "Staff",
     email: "mike@example.com",
   },
 ];

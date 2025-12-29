@@ -38,14 +38,14 @@ export default function TicketDetailScreen() {
   const [replyText, setReplyText] = useState("");
   const [isInternalNote, setIsInternalNote] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
-  const [assignType, setAssignType] = useState<"technician" | "department">("technician");
+  const [assignType, setAssignType] = useState<"staff" | "department">("staff");
   const [showWorkOrderModal, setShowWorkOrderModal] = useState(false);
   const [workOrderInput, setWorkOrderInput] = useState("");
   const currentUserId = "tech1";
 
   const utils = trpc.useUtils();
   const ticketQuery = trpc.tickets.get.useQuery({ id: id as string });
-  const techniciansQuery = trpc.settings.listTechnicians.useQuery();
+  const staffQuery = trpc.settings.listStaff.useQuery();
   const departmentsQuery = trpc.settings.listDepartments.useQuery();
   
   const updateStatusMutation = trpc.tickets.updateStatus.useMutation({
@@ -62,7 +62,7 @@ export default function TicketDetailScreen() {
     },
   });
 
-  const assignToTechnicianMutation = trpc.tickets.assignToTechnician.useMutation({
+  const assignToStaffMutation = trpc.tickets.assignToStaff.useMutation({
     onSuccess: () => {
       setShowAssignModal(false);
       utils.tickets.get.invalidate({ id: id as string });
@@ -114,11 +114,11 @@ export default function TicketDetailScreen() {
     });
   };
 
-  const handleAssignTechnician = (technicianId?: string, technicianName?: string) => {
-    assignToTechnicianMutation.mutate({
+  const handleAssignStaff = (staffId?: string, staffName?: string) => {
+    assignToStaffMutation.mutate({
       ticketId: id as string,
-      technicianId,
-      technicianName,
+      staffId,
+      staffName,
     });
   };
 
@@ -307,12 +307,12 @@ export default function TicketDetailScreen() {
             <View style={styles.assignmentRow}>
               <View style={styles.assignmentLabel}>
                 <UserCircle size={16} color="#6B7280" />
-                <Text style={styles.assignmentLabelText}>Technician</Text>
+                <Text style={styles.assignmentLabelText}>Staff</Text>
               </View>
               <TouchableOpacity
                 style={styles.assignmentValue}
                 onPress={() => {
-                  setAssignType("technician");
+                  setAssignType("staff");
                   setShowAssignModal(true);
                 }}
                 activeOpacity={0.7}
@@ -469,7 +469,7 @@ export default function TicketDetailScreen() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                Assign to {assignType === "technician" ? "Technician" : "Department"}
+                Assign to {assignType === "staff" ? "Staff" : "Department"}
               </Text>
               <TouchableOpacity onPress={() => setShowAssignModal(false)} activeOpacity={0.7}>
                 <X size={24} color="#6B7280" />
@@ -477,28 +477,28 @@ export default function TicketDetailScreen() {
             </View>
 
             <ScrollView style={styles.modalList}>
-              {assignType === "technician" && (
+              {assignType === "staff" && (
                 <>
                   <TouchableOpacity
                     style={styles.modalItem}
-                    onPress={() => handleAssignTechnician(undefined, undefined)}
+                    onPress={() => handleAssignStaff(undefined, undefined)}
                     activeOpacity={0.7}
                   >
                     <Text style={[styles.modalItemText, styles.modalItemUnassign]}>Unassign</Text>
                   </TouchableOpacity>
-                  {techniciansQuery.data?.map((tech) => (
+                  {staffQuery.data?.map((staff) => (
                     <TouchableOpacity
-                      key={tech.id}
+                      key={staff.id}
                       style={[
                         styles.modalItem,
-                        ticket.assignedToId === tech.id && styles.modalItemActive,
+                        ticket.assignedToId === staff.id && styles.modalItemActive,
                       ]}
-                      onPress={() => handleAssignTechnician(tech.id, tech.name)}
+                      onPress={() => handleAssignStaff(staff.id, staff.name)}
                       activeOpacity={0.7}
                     >
                       <View>
-                        <Text style={styles.modalItemText}>{tech.name}</Text>
-                        <Text style={styles.modalItemSubtext}>{tech.email}</Text>
+                        <Text style={styles.modalItemText}>{staff.name}</Text>
+                        <Text style={styles.modalItemSubtext}>{staff.email}</Text>
                       </View>
                     </TouchableOpacity>
                   ))}

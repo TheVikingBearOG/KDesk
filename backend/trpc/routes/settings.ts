@@ -51,12 +51,12 @@ const mockDepartments: Department[] = [
   },
 ];
 
-export const mockTechnicians: User[] = [
+export const mockStaff: User[] = [
   {
     id: "tech1",
     email: "sarah@company.com",
     name: "Sarah Agent",
-    role: "technician",
+    role: "staff",
     departmentId: "dept1",
     isActive: true,
   },
@@ -64,7 +64,7 @@ export const mockTechnicians: User[] = [
     id: "tech2",
     email: "tom@company.com",
     name: "Tom Support",
-    role: "technician",
+    role: "staff",
     departmentId: "dept1",
     isActive: true,
   },
@@ -72,7 +72,7 @@ export const mockTechnicians: User[] = [
     id: "tech3",
     email: "emma@company.com",
     name: "Emma Billing",
-    role: "technician",
+    role: "staff",
     departmentId: "dept2",
     isActive: true,
   },
@@ -126,62 +126,62 @@ export const settingsRouter = createTRPCRouter({
       return newDepartment;
     }),
 
-  listTechnicians: publicProcedure.query(() => {
-    return mockTechnicians.filter((t) => t.isActive);
+  listStaff: publicProcedure.query(() => {
+    return mockStaff.filter((t) => t.isActive);
   }),
 
-  createTechnician: publicProcedure
+  createStaff: publicProcedure
     .input(
       z.object({
         email: z.string().email(),
         name: z.string(),
-        role: z.enum(["technician", "admin"]),
+        role: z.enum(["staff", "admin"]),
         departmentId: z.string().optional(),
       }),
     )
     .mutation(({ input }) => {
-      const newTechnician: User = {
-        id: `tech${Date.now()}`,
+      const newStaff: User = {
+        id: `staff${Date.now()}`,
         email: input.email,
         name: input.name,
         role: input.role,
         departmentId: input.departmentId,
         isActive: true,
       };
-      mockTechnicians.push(newTechnician);
-      return newTechnician;
+      mockStaff.push(newStaff);
+      return newStaff;
     }),
 
-  updateTechnician: publicProcedure
+  updateStaff: publicProcedure
     .input(
       z.object({
         id: z.string(),
         name: z.string(),
         email: z.string().email(),
-        role: z.enum(["technician", "admin"]),
+        role: z.enum(["staff", "admin"]),
         departmentId: z.string().optional(),
       }),
     )
     .mutation(({ input }) => {
-      const tech = mockTechnicians.find((t) => t.id === input.id);
-      if (!tech) {
-        throw new Error("Technician not found");
+      const staff = mockStaff.find((t) => t.id === input.id);
+      if (!staff) {
+        throw new Error("Staff not found");
       }
-      tech.name = input.name;
-      tech.email = input.email;
-      tech.role = input.role;
-      tech.departmentId = input.departmentId;
-      return tech;
+      staff.name = input.name;
+      staff.email = input.email;
+      staff.role = input.role;
+      staff.departmentId = input.departmentId;
+      return staff;
     }),
 
-  deleteTechnician: publicProcedure
+  deleteStaff: publicProcedure
     .input(z.object({ id: z.string() }))
     .mutation(({ input }) => {
-      const tech = mockTechnicians.find((t) => t.id === input.id);
-      if (!tech) {
-        throw new Error("Technician not found");
+      const staff = mockStaff.find((t) => t.id === input.id);
+      if (!staff) {
+        throw new Error("Staff not found");
       }
-      tech.isActive = false;
+      staff.isActive = false;
       return { success: true };
     }),
 

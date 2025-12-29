@@ -51,7 +51,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  role: "technician" | "admin";
+  role: "staff" | "admin";
   departmentId?: string;
   avatarUrl?: string;
   isActive: boolean;

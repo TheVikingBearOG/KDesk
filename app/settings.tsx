@@ -26,7 +26,7 @@ export default function SettingsScreen() {
 
   const isAdmin = user?.role === "Administrator" || user?.role === "admin";
 
-  const [activeTab, setActiveTab] = useState<"email" | "technicians" | "departments" | "branding">("email");
+  const [activeTab, setActiveTab] = useState<"email" | "staff" | "departments" | "branding">("email");
   const [supportEmail, setSupportEmail] = useState("");
   const [imapHost, setImapHost] = useState("");
   const [imapPort, setImapPort] = useState("");
@@ -41,7 +41,7 @@ export default function SettingsScreen() {
   const [showTechModal, setShowTechModal] = useState(false);
   const [techName, setTechName] = useState("");
   const [techEmail, setTechEmail] = useState("");
-  const [techRole, setTechRole] = useState<"technician" | "admin">("technician");
+  const [staffRole, setStaffRole] = useState<"staff" | "admin">("staff");
   const [techDepartment, setTechDepartment] = useState<string | undefined>();
 
   const [showDeptModal, setShowDeptModal] = useState(false);
@@ -53,7 +53,7 @@ export default function SettingsScreen() {
 
   const utils = trpc.useUtils();
   const configQuery = trpc.settings.getMailboxConfig.useQuery();
-  const techniciansQuery = trpc.settings.listTechnicians.useQuery();
+  const staffQuery = trpc.settings.listStaff.useQuery();
   const departmentsQuery = trpc.settings.listDepartments.useQuery();
   const brandingQuery = trpc.settings.getBranding.useQuery();
 
@@ -66,14 +66,14 @@ export default function SettingsScreen() {
     },
   });
 
-  const createTechnicianMutation = trpc.settings.createTechnician.useMutation({
+  const createStaffMutation = trpc.settings.createStaff.useMutation({
     onSuccess: () => {
       setShowTechModal(false);
       setTechName("");
       setTechEmail("");
-      setTechRole("technician");
+      setStaffRole("staff");
       setTechDepartment(undefined);
-      utils.settings.listTechnicians.invalidate();
+      utils.settings.listStaff.invalidate();
       Alert.alert("Success", "User created successfully");
     },
     onError: () => {
@@ -81,13 +81,13 @@ export default function SettingsScreen() {
     },
   });
 
-  const deleteTechnicianMutation = trpc.settings.deleteTechnician.useMutation({
+  const deleteStaffMutation = trpc.settings.deleteStaff.useMutation({
     onSuccess: () => {
-      utils.settings.listTechnicians.invalidate();
-      Alert.alert("Success", "Technician deleted successfully");
+      utils.settings.listStaff.invalidate();
+      Alert.alert("Success", "Staff member deleted successfully");
     },
     onError: () => {
-      Alert.alert("Error", "Failed to delete technician");
+      Alert.alert("Error", "Failed to delete staff member");
     },
   });
 
@@ -153,26 +153,26 @@ export default function SettingsScreen() {
     });
   };
 
-  const handleCreateTechnician = () => {
+  const handleCreateStaff = () => {
     if (!techName || !techEmail) {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
-    createTechnicianMutation.mutate({
+    createStaffMutation.mutate({
       name: techName,
       email: techEmail,
-      role: techRole,
+      role: staffRole,
       departmentId: techDepartment,
     });
   };
 
-  const handleDeleteTechnician = (id: string, name: string) => {
+  const handleDeleteStaff = (id: string, name: string) => {
     Alert.alert(
-      "Delete Technician",
+      "Delete Staff Member",
       `Are you sure you want to delete ${name}?`,
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: () => deleteTechnicianMutation.mutate({ id }) },
+        { text: "Delete", style: "destructive", onPress: () => deleteStaffMutation.mutate({ id }) },
       ]
     );
   };
@@ -263,12 +263,12 @@ export default function SettingsScreen() {
           <Text style={[styles.tabText, activeTab === "email" && styles.tabTextActive]}>Email</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === "technicians" && styles.tabActive]}
-          onPress={() => setActiveTab("technicians")}
+          style={[styles.tab, activeTab === "staff" && styles.tabActive]}
+          onPress={() => setActiveTab("staff")}
           activeOpacity={0.7}
         >
-          <Text style={[styles.tabText, activeTab === "technicians" && styles.tabTextActive]}>
-            Technicians
+          <Text style={[styles.tabText, activeTab === "staff" && styles.tabTextActive]}>
+            Staff
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -448,10 +448,10 @@ export default function SettingsScreen() {
           </>
         )}
 
-        {activeTab === "technicians" && (
+        {activeTab === "staff" && (
           <>
             <View style={styles.listHeader}>
-              <Text style={styles.listTitle}>Technicians</Text>
+              <Text style={styles.listTitle}>Staff</Text>
               <TouchableOpacity
                 style={styles.addButton}
                 onPress={() => setShowTechModal(true)}
@@ -462,35 +462,35 @@ export default function SettingsScreen() {
               </TouchableOpacity>
             </View>
 
-            {techniciansQuery.isLoading ? (
+            {staffQuery.isLoading ? (
               <View style={styles.centerContent}>
                 <ActivityIndicator size="large" color="#3B82F6" />
               </View>
             ) : (
-              techniciansQuery.data?.map((tech) => {
-                const dept = departmentsQuery.data?.find(d => d.id === tech.departmentId);
+              staffQuery.data?.map((staff) => {
+                const dept = departmentsQuery.data?.find(d => d.id === staff.departmentId);
                 return (
-                  <View key={tech.id} style={styles.listItem}>
+                  <View key={staff.id} style={styles.listItem}>
                     <View style={styles.listItemIcon}>
                       <UserCircle size={24} color="#3B82F6" />
                     </View>
                     <View style={styles.listItemContent}>
                       <View style={styles.listItemTitleRow}>
-                        <Text style={styles.listItemTitle}>{tech.name}</Text>
-                        {tech.role === "admin" && (
+                        <Text style={styles.listItemTitle}>{staff.name}</Text>
+                        {staff.role === "admin" && (
                           <View style={styles.adminBadge}>
                             <Text style={styles.adminBadgeText}>Admin</Text>
                           </View>
                         )}
                       </View>
-                      <Text style={styles.listItemSubtitle}>{tech.email}</Text>
+                      <Text style={styles.listItemSubtitle}>{staff.email}</Text>
                       {dept && (
                         <Text style={styles.listItemDept}>{dept.name}</Text>
                       )}
                     </View>
                     <TouchableOpacity
                       style={styles.deleteButton}
-                      onPress={() => handleDeleteTechnician(tech.id, tech.name)}
+                      onPress={() => handleDeleteStaff(staff.id, staff.name)}
                       activeOpacity={0.7}
                     >
                       <Trash2 size={20} color="#EF4444" />
@@ -683,19 +683,19 @@ export default function SettingsScreen() {
                   <TouchableOpacity
                     style={[
                       styles.picker,
-                      techRole === "technician" && styles.pickerActive,
+                      staffRole === "staff" && styles.pickerActive,
                     ]}
-                    onPress={() => setTechRole("technician")}
+                    onPress={() => setStaffRole("staff")}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.pickerOption}>Technician</Text>
+                    <Text style={styles.pickerOption}>Staff</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[
                       styles.picker,
-                      techRole === "admin" && styles.pickerActive,
+                      staffRole === "admin" && styles.pickerActive,
                     ]}
-                    onPress={() => setTechRole("admin")}
+                    onPress={() => setStaffRole("admin")}
                     activeOpacity={0.7}
                   >
                     <Text style={styles.pickerOption}>Admin</Text>
@@ -733,12 +733,12 @@ export default function SettingsScreen() {
               </View>
 
               <TouchableOpacity
-                style={[styles.modalButton, createTechnicianMutation.isPending && styles.modalButtonDisabled]}
-                onPress={handleCreateTechnician}
-                disabled={createTechnicianMutation.isPending}
+                style={[styles.modalButton, createStaffMutation.isPending && styles.modalButtonDisabled]}
+                onPress={handleCreateStaff}
+                disabled={createStaffMutation.isPending}
                 activeOpacity={0.7}
               >
-                {createTechnicianMutation.isPending ? (
+                {createStaffMutation.isPending ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
                   <Text style={styles.modalButtonText}>Create User</Text>

@@ -3,7 +3,7 @@ import * as z from "zod";
 import { createTRPCRouter, publicProcedure } from "../create-context";
 import type { Ticket, User } from "@/backend/types/ticket";
 import { createNotification } from "./notifications";
-import { mockTechnicians } from "./settings";
+import { mockStaff } from "./settings";
 
 function generateEmailSignature(user: User): string {
   const department = user.departmentId ? mockDepartments.find(d => d.id === user.departmentId)?.name || '' : '';
@@ -20,7 +20,7 @@ function generateEmailSignature(user: User): string {
           </td>
           <td style="vertical-align: top;">
             <div style="font-weight: 700; font-size: 16px; color: #1f2937; margin-bottom: 4px;">${user.name}</div>
-            ${user.role === 'admin' ? '<div style="font-size: 12px; color: #3B82F6; font-weight: 600; margin-bottom: 8px;">Administrator</div>' : '<div style="font-size: 12px; color: #6b7280; font-weight: 600; margin-bottom: 8px;">Support Technician</div>'}
+            ${user.role === 'admin' ? '<div style="font-size: 12px; color: #3B82F6; font-weight: 600; margin-bottom: 8px;">Administrator</div>' : '<div style="font-size: 12px; color: #6b7280; font-weight: 600; margin-bottom: 8px;">Support Staff</div>'}
             ${department ? `<div style="color: #6b7280; margin-bottom: 4px;"><strong>Department:</strong> ${department}</div>` : ''}
             <div style="color: #3B82F6; margin-bottom: 4px;">
               <a href="mailto:${user.email}" style="color: #3B82F6; text-decoration: none;">${user.email}</a>
@@ -646,12 +646,12 @@ export const ticketsRouter = createTRPCRouter({
       return ticket;
     }),
 
-  assignToTechnician: publicProcedure
+  assignToStaff: publicProcedure
     .input(
       z.object({
         ticketId: z.string(),
-        technicianId: z.string().optional(),
-        technicianName: z.string().optional(),
+        staffId: z.string().optional(),
+        staffName: z.string().optional(),
       }),
     )
     .mutation(({ input }) => {
@@ -659,14 +659,14 @@ export const ticketsRouter = createTRPCRouter({
       if (!ticket) {
         throw new Error("Ticket not found");
       }
-      const previousTechnicianId = ticket.assignedToId;
-      ticket.assignedToId = input.technicianId;
-      ticket.assignedToName = input.technicianName;
+      const previousStaffId = ticket.assignedToId;
+      ticket.assignedToId = input.staffId;
+      ticket.assignedToName = input.staffName;
       ticket.updatedAt = new Date();
 
-      if (input.technicianId && input.technicianId !== previousTechnicianId) {
+      if (input.staffId && input.staffId !== previousStaffId) {
         createNotification({
-          userId: input.technicianId,
+          userId: input.staffId,
           type: "ticket_assigned",
           title: "Ticket Assigned",
           message: `You have been assigned to ticket #${ticket.ticketNumber}: ${ticket.subject}`,
@@ -717,7 +717,7 @@ export const ticketsRouter = createTRPCRouter({
       let bodyText = input.body;
 
       if (!input.isInternal && input.userId) {
-        const user = mockTechnicians.find((t: User) => t.id === input.userId);
+        const user = mockStaff.find((t: User) => t.id === input.userId);
         if (user) {
           const signature = generateEmailSignature(user);
           bodyHtml += signature;
