@@ -431,15 +431,40 @@ export default function ChatScreen() {
     );
   }).slice(0, 8) || [];
 
+  const getMentionSuggestions = (): (TaggableUser | TaggableDepartment)[] => {
+    const users = usersQuery.data || [];
+    const departments = departmentsForTaggingQuery.data || [];
+
+    if (mentionQuery === "") {
+      const shuffledDepts = [...departments].sort(() => Math.random() - 0.5);
+      const shuffledUsers = [...users].sort(() => Math.random() - 0.5);
+      
+      return [
+        ...shuffledDepts.slice(0, 1),
+        ...shuffledUsers.slice(0, 2),
+      ];
+    }
+
+    const lowerQuery = mentionQuery.toLowerCase();
+    const filteredDepts = departments.filter((d) =>
+      d.name.toLowerCase().includes(lowerQuery)
+    );
+    const filteredUsers = users.filter((u) =>
+      u.name.toLowerCase().includes(lowerQuery) ||
+      u.email.toLowerCase().includes(lowerQuery)
+    );
+
+    return [...filteredDepts, ...filteredUsers].slice(0, 3);
+  };
+
+  const mentionSuggestions = getMentionSuggestions();
+
   const renderInputArea = () => (
     <>
-      {showMentions && (
+      {showMentions && mentionSuggestions.length > 0 && (
         <View style={[styles.mentionsDropdown, { backgroundColor: colors.cardBackground, borderTopColor: colors.border }]}>
           <FlatList
-            data={[
-              ...(departmentsForTaggingQuery.data || []),
-              ...(usersQuery.data || [])
-            ]}
+            data={mentionSuggestions}
             renderItem={renderMentionSuggestion}
             keyExtractor={(item) => item.id}
             keyboardShouldPersistTaps="handled"
