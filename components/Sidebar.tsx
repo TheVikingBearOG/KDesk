@@ -42,6 +42,7 @@ export default function Sidebar() {
   const { colors } = useBranding();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserInfo, setShowUserInfo] = useState(false);
   const currentUserId = "tech1";
 
   const { data: unreadCount = 0 } = trpc.notifications.getUnreadCount.useQuery(
@@ -110,19 +111,13 @@ export default function Sidebar() {
         />
       </View>
 
-      <View style={styles.profileSection}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>AD</Text>
-        </View>
-        <Text style={styles.profileName}>Admin User</Text>
-        <Text style={styles.profileRole}>Administrator</Text>
-        
+      <View style={styles.topNotificationSection}>
         <TouchableOpacity
           style={styles.notificationButton}
           onPress={() => setShowNotifications(true)}
           activeOpacity={0.7}
         >
-          <Bell size={20} color="#6B7280" strokeWidth={2} />
+          <Bell size={20} color={colors.textSecondary} strokeWidth={2} />
           {unreadCount > 0 && (
             <View style={styles.notificationBadge}>
               <Text style={styles.notificationBadgeText}>
@@ -179,6 +174,20 @@ export default function Sidebar() {
           >
             Settings
           </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.userProfileButton}
+          onPress={() => setShowUserInfo(true)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.userAvatar}>
+            <Text style={styles.userAvatarText}>AD</Text>
+          </View>
+          <View style={styles.userInfo}>
+            <Text style={styles.userName}>Admin User</Text>
+            <Text style={styles.userRole}>Administrator</Text>
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -263,6 +272,60 @@ export default function Sidebar() {
           </View>
         </View>
       </Modal>
+
+      <Modal
+        visible={showUserInfo}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowUserInfo(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.userInfoPanel}>
+            <View style={styles.userInfoHeader}>
+              <Text style={styles.userInfoTitle}>User Profile</Text>
+              <TouchableOpacity
+                onPress={() => setShowUserInfo(false)}
+                style={styles.closeButton}
+              >
+                <X size={20} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.userInfoContent}>
+              <View style={styles.userInfoAvatarContainer}>
+                <View style={styles.userInfoAvatar}>
+                  <Text style={styles.userInfoAvatarText}>AD</Text>
+                </View>
+              </View>
+
+              <View style={styles.userInfoField}>
+                <Text style={styles.userInfoLabel}>Name</Text>
+                <Text style={styles.userInfoValue}>Admin User</Text>
+              </View>
+
+              <View style={styles.userInfoField}>
+                <Text style={styles.userInfoLabel}>Role</Text>
+                <Text style={styles.userInfoValue}>Administrator</Text>
+              </View>
+
+              <View style={styles.userInfoField}>
+                <Text style={styles.userInfoLabel}>User ID</Text>
+                <Text style={styles.userInfoValue}>{currentUserId}</Text>
+              </View>
+
+              <View style={styles.userInfoField}>
+                <Text style={styles.userInfoLabel}>Email</Text>
+                <Text style={styles.userInfoValue}>admin@company.com</Text>
+              </View>
+
+              <View style={styles.userInfoField}>
+                <Text style={styles.userInfoLabel}>Department</Text>
+                <Text style={styles.userInfoValue}>Technical Support</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -308,36 +371,11 @@ const createStyles = (colors: any) => StyleSheet.create({
     width: 220,
     height: 80,
   },
-  profileSection: {
-    padding: 20,
-    alignItems: "center",
+  topNotificationSection: {
+    padding: 16,
+    alignItems: "flex-end",
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-  },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.primaryColor,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  avatarText: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
-  profileName: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: colors.textPrimary,
-    marginBottom: 4,
-  },
-  profileRole: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontWeight: "500",
   },
   menuSection: {
     flex: 1,
@@ -369,10 +407,44 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
+  userProfileButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    marginHorizontal: 12,
+    marginTop: 8,
+    borderRadius: 8,
+    backgroundColor: colors.inputBackground,
+    gap: 12,
+  },
+  userAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primaryColor,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  userAvatarText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.textPrimary,
+    marginBottom: 2,
+  },
+  userRole: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    fontWeight: "500",
+  },
   notificationButton: {
-    position: "absolute" as const,
-    top: 20,
-    right: 20,
     padding: 8,
     borderRadius: 8,
     backgroundColor: colors.inputBackground,
@@ -508,5 +580,72 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   deleteButton: {
     padding: 4,
+  },
+  userInfoPanel: {
+    width: 440,
+    backgroundColor: colors.cardBackground,
+    borderRadius: 12,
+    overflow: "hidden",
+    ...Platform.select({
+      web: {
+        boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" as any,
+      },
+      default: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.1,
+        shadowRadius: 20,
+        elevation: 10,
+      },
+    }),
+  },
+  userInfoHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  userInfoTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.textPrimary,
+  },
+  userInfoContent: {
+    padding: 24,
+  },
+  userInfoAvatarContainer: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  userInfoAvatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.primaryColor,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  userInfoAvatarText: {
+    fontSize: 32,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  userInfoField: {
+    marginBottom: 20,
+  },
+  userInfoLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.textSecondary,
+    textTransform: "uppercase" as const,
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  userInfoValue: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: colors.textPrimary,
   },
 });
