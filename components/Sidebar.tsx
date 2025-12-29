@@ -53,18 +53,21 @@ export default function Sidebar() {
 
   const { data: unreadCount = 0 } = trpc.notifications.getUnreadCount.useQuery(
     { userId: currentUserId },
-    { refetchInterval: 5000 }
+    { refetchInterval: 2000 }
   );
 
-  const { data: notifications = [] } = trpc.notifications.list.useQuery(
+  const { data: notifications = [], refetch: refetchNotifications } = trpc.notifications.list.useQuery(
     { userId: currentUserId },
-    { enabled: showNotifications }
+    { 
+      enabled: showNotifications,
+      refetchInterval: showNotifications ? 2000 : false
+    }
   );
 
   const { data: latestNotification } = trpc.notifications.list.useQuery(
     { userId: currentUserId },
     { 
-      refetchInterval: 5000,
+      refetchInterval: 2000,
       select: (data) => data[0]
     }
   );
@@ -135,7 +138,10 @@ export default function Sidebar() {
         </View>
         <TouchableOpacity
           style={styles.notificationButton}
-          onPress={() => setShowNotifications(true)}
+          onPress={() => {
+            setShowNotifications(true);
+            setTimeout(() => refetchNotifications(), 100);
+          }}
           activeOpacity={0.7}
         >
           <Bell size={20} color={colors.textSecondary} strokeWidth={2} />

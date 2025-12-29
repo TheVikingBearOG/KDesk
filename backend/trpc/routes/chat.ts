@@ -313,14 +313,19 @@ export const chatRouter = createTRPCRouter({
           },
         ];
 
+        console.log("[CHAT] Department mentions:", input.departmentMentions);
+        
         input.departmentMentions.forEach((deptId) => {
           const department = mockDepartments.find((d) => d.id === deptId);
           const usersInDepartment = mockStaff.filter(
             (u: User) => u.departmentId === deptId && u.isActive
           );
 
+          console.log(`[CHAT] Department ${department?.name} has ${usersInDepartment.length} users`);
+
           usersInDepartment.forEach((user: User) => {
             if (user.id !== (input.userId || "current_user")) {
+              console.log(`[CHAT] Creating notification for user ${user.name} (${user.id})`);
               createNotification({
                 userId: user.id,
                 type: "chat_mention",
@@ -330,6 +335,8 @@ export const chatRouter = createTRPCRouter({
                 messageId: id,
                 read: false,
               });
+            } else {
+              console.log(`[CHAT] Skipping notification for current user ${user.name}`);
             }
           });
         });
