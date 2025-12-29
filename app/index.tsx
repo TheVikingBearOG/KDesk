@@ -15,6 +15,7 @@ import { Search, AlertCircle, Clock, CheckCircle, Archive } from "lucide-react-n
 import { trpc } from "@/lib/trpc";
 import type { Ticket, TicketStatus, TicketPriority } from "@/backend/types/ticket";
 import { useBranding } from "@/contexts/BrandingContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const FILTERS: { label: string; value: TicketStatus | "all" }[] = [
   { label: "All", value: "all" },
@@ -42,11 +43,12 @@ const PRIORITY_COLORS: Record<TicketPriority, string> = {
 export default function DashboardScreen() {
   const router = useRouter();
   const { colors } = useBranding();
+  const { user } = useAuth();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const [selectedFilter, setSelectedFilter] = useState<TicketStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const currentUserId = "agent1";
+  const currentUserId = user?.id || "";
 
   const ticketsQuery = trpc.tickets.list.useQuery({
     status: selectedFilter === "all" ? undefined : selectedFilter,

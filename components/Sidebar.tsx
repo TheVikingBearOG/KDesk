@@ -18,9 +18,11 @@ import {
   Bell,
   X,
   BarChart3,
+  LogOut,
 } from "lucide-react-native";
 import { trpc } from "@/lib/trpc";
 import { useBranding } from "@/contexts/BrandingContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MenuItem {
   id: string;
@@ -40,10 +42,11 @@ export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { colors } = useBranding();
+  const { user, signOut } = useAuth();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserInfo, setShowUserInfo] = useState(false);
-  const currentUserId = "tech1";
+  const currentUserId = user?.id || "";
 
   const { data: unreadCount = 0 } = trpc.notifications.getUnreadCount.useQuery(
     { userId: currentUserId },
@@ -197,11 +200,11 @@ export default function Sidebar() {
           activeOpacity={0.7}
         >
           <View style={styles.userAvatar}>
-            <Text style={styles.userAvatarText}>AD</Text>
+            <Text style={styles.userAvatarText}>{user?.name[0] || "U"}</Text>
           </View>
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>Admin User</Text>
-            <Text style={styles.userRole}>Administrator</Text>
+            <Text style={styles.userName}>{user?.name || "User"}</Text>
+            <Text style={styles.userRole}>{user?.role || "Role"}</Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -309,34 +312,41 @@ export default function Sidebar() {
             <View style={styles.userInfoContent}>
               <View style={styles.userInfoAvatarContainer}>
                 <View style={styles.userInfoAvatar}>
-                  <Text style={styles.userInfoAvatarText}>AD</Text>
+                  <Text style={styles.userInfoAvatarText}>{user?.name[0] || "U"}</Text>
                 </View>
               </View>
 
               <View style={styles.userInfoField}>
                 <Text style={styles.userInfoLabel}>Name</Text>
-                <Text style={styles.userInfoValue}>Admin User</Text>
+                <Text style={styles.userInfoValue}>{user?.name || "N/A"}</Text>
               </View>
 
               <View style={styles.userInfoField}>
                 <Text style={styles.userInfoLabel}>Role</Text>
-                <Text style={styles.userInfoValue}>Administrator</Text>
+                <Text style={styles.userInfoValue}>{user?.role || "N/A"}</Text>
               </View>
 
               <View style={styles.userInfoField}>
                 <Text style={styles.userInfoLabel}>User ID</Text>
-                <Text style={styles.userInfoValue}>{currentUserId}</Text>
+                <Text style={styles.userInfoValue}>{user?.id || "N/A"}</Text>
               </View>
 
               <View style={styles.userInfoField}>
                 <Text style={styles.userInfoLabel}>Email</Text>
-                <Text style={styles.userInfoValue}>admin@company.com</Text>
+                <Text style={styles.userInfoValue}>{user?.email || "N/A"}</Text>
               </View>
 
-              <View style={styles.userInfoField}>
-                <Text style={styles.userInfoLabel}>Department</Text>
-                <Text style={styles.userInfoValue}>Technical Support</Text>
-              </View>
+              <TouchableOpacity
+                style={styles.signOutButton}
+                onPress={() => {
+                  setShowUserInfo(false);
+                  signOut();
+                }}
+                activeOpacity={0.7}
+              >
+                <LogOut size={18} color="#EF4444" strokeWidth={2} />
+                <Text style={styles.signOutButtonText}>Sign Out</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -678,5 +688,22 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     color: colors.textPrimary,
+  },
+  signOutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FEE2E2",
+    borderRadius: 10,
+    paddingVertical: 14,
+    marginTop: 12,
+    gap: 8,
+    borderWidth: 2,
+    borderColor: "#FCA5A5",
+  },
+  signOutButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#EF4444",
   },
 });
