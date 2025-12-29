@@ -11,7 +11,7 @@ import {
   Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Check, Plus, UserCircle, Building2, X, Trash2, AlertCircle } from "lucide-react-native";
+import { Check, Plus, UserCircle, Building2, X, AlertCircle } from "lucide-react-native";
 import { trpc } from "@/lib/trpc";
 import { useBranding } from "@/contexts/BrandingContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -81,15 +81,7 @@ export default function SettingsScreen() {
     },
   });
 
-  const deleteStaffMutation = trpc.settings.deleteStaff.useMutation({
-    onSuccess: () => {
-      utils.settings.listStaff.invalidate();
-      Alert.alert("Success", "Staff member deleted successfully");
-    },
-    onError: () => {
-      Alert.alert("Error", "Failed to delete staff member");
-    },
-  });
+
 
   const createDepartmentMutation = trpc.settings.createDepartment.useMutation({
     onSuccess: async () => {
@@ -166,16 +158,7 @@ export default function SettingsScreen() {
     });
   };
 
-  const handleDeleteStaff = (id: string, name: string) => {
-    Alert.alert(
-      "Delete Staff Member",
-      `Are you sure you want to delete ${name}?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: () => deleteStaffMutation.mutate({ id }) },
-      ]
-    );
-  };
+
 
   const handleCreateDepartment = () => {
     if (!deptName || !deptDescription) {
@@ -470,7 +453,12 @@ export default function SettingsScreen() {
               staffQuery.data?.map((staff) => {
                 const dept = departmentsQuery.data?.find(d => d.id === staff.departmentId);
                 return (
-                  <View key={staff.id} style={styles.listItem}>
+                  <TouchableOpacity
+                    key={staff.id}
+                    style={styles.listItem}
+                    onPress={() => router.push(`/staff/${staff.id}` as any)}
+                    activeOpacity={0.7}
+                  >
                     <View style={styles.listItemIcon}>
                       <UserCircle size={24} color="#3B82F6" />
                     </View>
@@ -488,14 +476,7 @@ export default function SettingsScreen() {
                         <Text style={styles.listItemDept}>{dept.name}</Text>
                       )}
                     </View>
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      onPress={() => handleDeleteStaff(staff.id, staff.name)}
-                      activeOpacity={0.7}
-                    >
-                      <Trash2 size={20} color="#EF4444" />
-                    </TouchableOpacity>
-                  </View>
+                  </TouchableOpacity>
                 );
               })
             )}
