@@ -40,6 +40,7 @@ export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { colors } = useBranding();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
   const [showNotifications, setShowNotifications] = useState(false);
   const currentUserId = "tech1";
 
@@ -281,12 +282,12 @@ function formatNotificationTime(timestamp: string): string {
   return time.toLocaleDateString();
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   sidebar: {
     width: 280,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.cardBackground,
     borderRightWidth: 1,
-    borderRightColor: "#E5E7EB",
+    borderRightColor: colors.border,
     height: "100%",
     ...Platform.select({
       web: {
@@ -300,7 +301,7 @@ const styles = StyleSheet.create({
   logoSection: {
     padding: 24,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: colors.border,
     alignItems: "center",
   },
   logo: {
@@ -311,13 +312,13 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: colors.border,
   },
   avatar: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: "#3B82F6",
+    backgroundColor: colors.primaryColor,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 12,
@@ -330,12 +331,12 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   profileRole: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.textSecondary,
     fontWeight: "500",
   },
   menuSection: {
@@ -353,20 +354,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   menuItemActive: {
-    backgroundColor: "#EFF6FF",
+    backgroundColor: colors.primaryColor + "20",
   },
   menuText: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#6B7280",
+    color: colors.textSecondary,
   },
   menuTextActive: {
-    color: "#3B82F6",
+    color: colors.primaryColor,
   },
   bottomSection: {
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: "#F3F4F6",
+    borderTopColor: colors.border,
   },
   notificationButton: {
     position: "absolute" as const,
@@ -374,7 +375,7 @@ const styles = StyleSheet.create({
     right: 20,
     padding: 8,
     borderRadius: 8,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.inputBackground,
   },
   notificationBadge: {
     position: "absolute" as const,
@@ -402,7 +403,7 @@ const styles = StyleSheet.create({
   notificationPanel: {
     width: 480,
     maxHeight: "80%",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.cardBackground,
     borderRadius: 12,
     overflow: "hidden",
     ...Platform.select({
@@ -424,12 +425,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.border,
   },
   notificationTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.textPrimary,
   },
   notificationHeaderActions: {
     flexDirection: "row",
@@ -443,7 +444,7 @@ const styles = StyleSheet.create({
   markAllButtonText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#3B82F6",
+    color: colors.primaryColor,
   },
   closeButton: {
     padding: 4,
@@ -466,12 +467,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: colors.border,
     alignItems: "flex-start",
     gap: 12,
   },
   notificationItemUnread: {
-    backgroundColor: "#F0F9FF",
+    backgroundColor: colors.primaryColor + "15",
   },
   notificationContent: {
     flex: 1,
@@ -482,7 +483,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.inputBackground,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -492,18 +493,18 @@ const styles = StyleSheet.create({
   notificationItemTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   notificationItemMessage: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.textSecondary,
     lineHeight: 18,
     marginBottom: 6,
   },
   notificationItemTime: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.textSecondary,
   },
   deleteButton: {
     padding: 4,

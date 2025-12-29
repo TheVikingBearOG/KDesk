@@ -42,6 +42,7 @@ const PRIORITY_COLORS: Record<TicketPriority, string> = {
 export default function TicketsScreen() {
   const router = useRouter();
   const { colors } = useBranding();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
   const [selectedFilter, setSelectedFilter] = useState<TicketStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -238,10 +239,10 @@ export default function TicketsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.backgroundColor,
   },
   header: {
     flexDirection: "row",
@@ -249,27 +250,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 32,
     paddingVertical: 24,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.cardBackground,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.border,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.textPrimary,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.textSecondary,
     marginTop: 4,
   },
 
   statsContainer: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.cardBackground,
     paddingHorizontal: 32,
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.border,
   },
   statsRow: {
     flexDirection: "row",
@@ -277,7 +278,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.inputBackground,
     borderRadius: 12,
     padding: 16,
     alignItems: "center",
@@ -308,40 +309,40 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 28,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.textPrimary,
   },
   statLabel: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#6B7280",
+    color: colors.textSecondary,
     textTransform: "uppercase",
   },
   searchContainer: {
     paddingHorizontal: 32,
     paddingVertical: 20,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.cardBackground,
   },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.inputBackground,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.border,
   },
   searchInput: {
     flex: 1,
     fontSize: 15,
-    color: "#1F2937",
+    color: colors.textPrimary,
   },
   filtersContainer: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.cardBackground,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.border,
   },
   filtersList: {
     paddingHorizontal: 32,
@@ -351,19 +352,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 6,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.inputBackground,
     marginRight: 8,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.border,
   },
   filterChipActive: {
-    backgroundColor: "#3B82F6",
-    borderColor: "#3B82F6",
+    backgroundColor: colors.primaryColor,
+    borderColor: colors.primaryColor,
   },
   filterText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#6B7280",
+    color: colors.textSecondary,
   },
   filterTextActive: {
     color: "#FFFFFF",
@@ -373,7 +374,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   ticketCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.cardBackground,
     borderRadius: 8,
     padding: 20,
     marginBottom: 0,
@@ -383,7 +384,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.border,
   },
   ticketHeader: {
     flexDirection: "row",
@@ -437,7 +438,7 @@ const styles = StyleSheet.create({
   subject: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#111827",
+    color: colors.textPrimary,
     marginBottom: 12,
     lineHeight: 22,
   },
@@ -447,12 +448,12 @@ const styles = StyleSheet.create({
   requester: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.textPrimary,
     marginBottom: 2,
   },
   requesterEmail: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.textSecondary,
   },
   ticketFooter: {
     flexDirection: "row",
@@ -461,7 +462,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "#F3F4F6",
+    borderTopColor: colors.border,
   },
   assigneeRow: {
     flexDirection: "row",
@@ -492,19 +493,19 @@ const styles = StyleSheet.create({
   },
   assigneeName: {
     fontSize: 13,
-    color: "#374151",
+    color: colors.textPrimary,
     fontWeight: "600",
   },
   departmentBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 4,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.inputBackground,
   },
   departmentText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#6B7280",
+    color: colors.textSecondary,
   },
   centerContent: {
     flex: 1,
@@ -521,6 +522,6 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: 16,
-    color: "#9CA3AF",
+    color: colors.textSecondary,
   },
 });
