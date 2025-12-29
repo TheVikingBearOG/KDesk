@@ -120,13 +120,13 @@ export default function Sidebar() {
       </View>
 
       <View style={styles.topNotificationSection}>
-        {latestNotification && (
-          <View style={styles.latestNotificationPreview}>
+        <View style={styles.latestNotificationPreview}>
+          {latestNotification && (
             <Text style={styles.latestNotificationText} numberOfLines={1}>
               {latestNotification.title}
             </Text>
-          </View>
-        )}
+          )}
+        </View>
         <TouchableOpacity
           style={styles.notificationButton}
           onPress={() => setShowNotifications(true)}
