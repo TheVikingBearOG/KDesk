@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Settings, Search, AlertCircle, Clock, CheckCircle, Archive, MessageCircle, TrendingUp, TrendingDown } from "lucide-react-native";
+import { Settings, Search, AlertCircle, Clock, CheckCircle, Archive, MessageCircle } from "lucide-react-native";
 import { trpc } from "@/lib/trpc";
 import type { Ticket, TicketStatus, TicketPriority } from "@/backend/types/ticket";
 
@@ -74,21 +74,6 @@ export default function DashboardScreen() {
       total: statsQuery.data.totalTickets,
     };
   }, [statsQuery.data]);
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    if (date.toDateString() === today.toDateString()) {
-      return "Today";
-    }
-    if (date.toDateString() === yesterday.toDateString()) {
-      return "Yesterday";
-    }
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  };
 
   const formatTime = (date: Date) => {
     const now = new Date();
@@ -217,31 +202,6 @@ export default function DashboardScreen() {
             <Text style={styles.statLabel}>Total</Text>
           </View>
         </View>
-      </View>
-
-      <View style={styles.dailyReportContainer}>
-        <Text style={styles.dailyReportTitle}>7-Day Activity</Text>
-        {statsQuery.isLoading ? (
-          <ActivityIndicator size="small" color="#3B82F6" style={styles.dailyReportLoader} />
-        ) : (
-          <View style={styles.dailyReportList}>
-            {statsQuery.data?.dailyStats.map((day) => (
-              <View key={day.date} style={styles.dailyReportItem}>
-                <Text style={styles.dailyReportDate}>{formatDate(day.date)}</Text>
-                <View style={styles.dailyReportStats}>
-                  <View style={styles.dailyReportStat}>
-                    <TrendingUp size={14} color="#10B981" />
-                    <Text style={styles.dailyReportStatText}>{day.opened} opened</Text>
-                  </View>
-                  <View style={styles.dailyReportStat}>
-                    <TrendingDown size={14} color="#6B7280" />
-                    <Text style={styles.dailyReportStatText}>{day.closed} closed</Text>
-                  </View>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
       </View>
 
       <View style={styles.searchContainer}>
@@ -609,52 +569,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#9CA3AF",
   },
-  dailyReportContainer: {
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  dailyReportTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 16,
-  },
-  dailyReportLoader: {
-    paddingVertical: 20,
-  },
-  dailyReportList: {
-    gap: 12,
-  },
-  dailyReportItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: "#F9FAFB",
-    borderRadius: 8,
-  },
-  dailyReportDate: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#374151",
-    minWidth: 80,
-  },
-  dailyReportStats: {
-    flexDirection: "row",
-    gap: 16,
-  },
-  dailyReportStat: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  dailyReportStatText: {
-    fontSize: 13,
-    color: "#6B7280",
-    fontWeight: "500",
-  },
+
 });
