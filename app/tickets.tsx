@@ -14,6 +14,7 @@ import { useRouter } from "expo-router";
 import { Search, AlertCircle, Clock, CheckCircle, Archive } from "lucide-react-native";
 import { trpc } from "@/lib/trpc";
 import type { Ticket, TicketStatus, TicketPriority } from "@/backend/types/ticket";
+import { useBranding } from "@/contexts/BrandingContext";
 
 const FILTERS: { label: string; value: TicketStatus | "all" }[] = [
   { label: "All", value: "all" },
@@ -40,6 +41,7 @@ const PRIORITY_COLORS: Record<TicketPriority, string> = {
 
 export default function TicketsScreen() {
   const router = useRouter();
+  const { branding } = useBranding();
   const [selectedFilter, setSelectedFilter] = useState<TicketStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -132,7 +134,7 @@ export default function TicketsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={Platform.OS === "web" ? [] : ["top"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: branding.backgroundColor }]} edges={Platform.OS === "web" ? [] : ["top"]}>
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>All Tickets</Text>
