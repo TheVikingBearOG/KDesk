@@ -362,14 +362,15 @@ const createStyles = (colors: any) => StyleSheet.create({
     }),
   },
   logoSection: {
-    padding: 24,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     alignItems: "center",
   },
   logo: {
-    width: 440,
-    height: 160,
+    width: 256,
+    height: 80,
   },
   topNotificationSection: {
     padding: 16,
