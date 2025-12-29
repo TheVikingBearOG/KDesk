@@ -368,8 +368,8 @@ const createStyles = (colors: any) => StyleSheet.create({
     alignItems: "center",
   },
   logo: {
-    width: 220,
-    height: 80,
+    width: 440,
+    height: 160,
   },
   topNotificationSection: {
     padding: 16,
