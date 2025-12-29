@@ -11,14 +11,21 @@ import {
   Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Check, Plus, UserCircle, Building2, X, Trash2 } from "lucide-react-native";
+import { Check, Plus, UserCircle, Building2, X, Trash2, AlertCircle } from "lucide-react-native";
 import { trpc } from "@/lib/trpc";
 import { useBranding } from "@/contexts/BrandingContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "expo-router";
 
 type ThemeType = "light" | "dark" | "plex";
 
 export default function SettingsScreen() {
   const { colors, refetch: refetchBranding } = useBranding();
+  const { user } = useAuth();
+  const router = useRouter();
+
+  const isAdmin = user?.role === "Administrator" || user?.role === "admin";
+
   const [activeTab, setActiveTab] = useState<"email" | "technicians" | "departments" | "branding">("email");
   const [supportEmail, setSupportEmail] = useState("");
   const [imapHost, setImapHost] = useState("");
@@ -213,11 +220,35 @@ export default function SettingsScreen() {
     },
   ];
 
+  if (!isAdmin) {
+    return (
+      <SafeAreaView style={styles.container} edges={["bottom"]}>
+        <View style={styles.unauthorizedContainer}>
+          <AlertCircle size={64} color="#EF4444" strokeWidth={2} />
+          <Text style={styles.unauthorizedTitle}>Access Denied</Text>
+          <Text style={styles.unauthorizedMessage}>
+            You don&apos;t have permission to access this page.
+            Only administrators can manage settings.
+          </Text>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.push("/" as any)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.backButtonText}>Go to Dashboard</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (configQuery.isLoading) {
     return (
-      <View style={styles.centerContent}>
-        <ActivityIndicator size="large" color="#3B82F6" />
-      </View>
+      <SafeAreaView style={styles.container} edges={["bottom"]}>
+        <View style={styles.centerContent}>
+          <ActivityIndicator size="large" color="#3B82F6" />
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -1085,5 +1116,36 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#FFFFFF",
   },
-
+  unauthorizedContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 40,
+    backgroundColor: "#FFFFFF",
+  },
+  unauthorizedTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#1F2937",
+    marginTop: 24,
+    marginBottom: 12,
+  },
+  unauthorizedMessage: {
+    fontSize: 15,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 32,
+  },
+  backButton: {
+    backgroundColor: "#3B82F6",
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 10,
+  },
+  backButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
 });

@@ -35,6 +35,9 @@ const MENU_ITEMS: MenuItem[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/" },
   { id: "tickets", label: "Tickets", icon: Ticket, path: "/tickets" },
   { id: "chat", label: "Team Chat", icon: MessageSquare, path: "/chat" },
+];
+
+const ADMIN_ONLY_ITEMS: MenuItem[] = [
   { id: "statistics", label: "Statistics", icon: BarChart3, path: "/statistics" },
 ];
 
@@ -168,31 +171,54 @@ export default function Sidebar() {
             </TouchableOpacity>
           );
         })}
+        {(user?.role === "Administrator" || user?.role === "admin") && ADMIN_ONLY_ITEMS.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(item.path);
+          return (
+            <TouchableOpacity
+              key={item.id}
+              style={[styles.menuItem, active && styles.menuItemActive]}
+              onPress={() => handleNavigate(item.path)}
+              activeOpacity={0.7}
+            >
+              <Icon
+                size={20}
+                color={active ? colors.primaryColor : "#6B7280"}
+                strokeWidth={2}
+              />
+              <Text style={[styles.menuText, active && styles.menuTextActive]}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       <View style={styles.bottomSection}>
-        <TouchableOpacity
-          style={[
-            styles.menuItem,
-            isActive("/settings") && styles.menuItemActive,
-          ]}
-          onPress={() => handleNavigate("/settings")}
-          activeOpacity={0.7}
-        >
-          <Settings
-            size={20}
-            color={isActive("/settings") ? colors.primaryColor : "#6B7280"}
-            strokeWidth={2}
-          />
-          <Text
+        {(user?.role === "Administrator" || user?.role === "admin") && (
+          <TouchableOpacity
             style={[
-              styles.menuText,
-              isActive("/settings") && styles.menuTextActive,
+              styles.menuItem,
+              isActive("/settings") && styles.menuItemActive,
             ]}
+            onPress={() => handleNavigate("/settings")}
+            activeOpacity={0.7}
           >
-            Settings
-          </Text>
-        </TouchableOpacity>
+            <Settings
+              size={20}
+              color={isActive("/settings") ? colors.primaryColor : "#6B7280"}
+              strokeWidth={2}
+            />
+            <Text
+              style={[
+                styles.menuText,
+                isActive("/settings") && styles.menuTextActive,
+              ]}
+            >
+              Settings
+            </Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity
           style={styles.userProfileButton}

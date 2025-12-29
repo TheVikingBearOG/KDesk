@@ -11,11 +11,17 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AlertCircle, Clock, CheckCircle, Archive, TrendingUp, TrendingDown } from "lucide-react-native";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "expo-router";
 
 type DateRange = 7 | 14 | 30;
 
 export default function StatisticsScreen() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [selectedRange, setSelectedRange] = useState<DateRange>(7);
+
+  const isAdmin = user?.role === "Administrator" || user?.role === "admin";
 
   const statsQuery = trpc.tickets.getStats.useQuery({});
 
@@ -57,6 +63,28 @@ export default function StatisticsScreen() {
     const values = filteredStats.flatMap(day => [day.opened, day.closed]);
     return Math.max(...values, 1);
   }, [filteredStats]);
+
+  if (!isAdmin) {
+    return (
+      <SafeAreaView style={styles.container} edges={Platform.OS === "web" ? [] : ["top"]}>
+        <View style={styles.unauthorizedContainer}>
+          <AlertCircle size={64} color="#EF4444" strokeWidth={2} />
+          <Text style={styles.unauthorizedTitle}>Access Denied</Text>
+          <Text style={styles.unauthorizedMessage}>
+            You don&apos;t have permission to access this page.
+            Only administrators can view statistics.
+          </Text>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.push("/" as any)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.backButtonText}>Go to Dashboard</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (statsQuery.isLoading) {
     return (
@@ -577,5 +605,37 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "#E5E7EB",
     marginVertical: 8,
+  },
+  unauthorizedContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 40,
+    backgroundColor: "#FFFFFF",
+  },
+  unauthorizedTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#111827",
+    marginTop: 24,
+    marginBottom: 12,
+  },
+  unauthorizedMessage: {
+    fontSize: 15,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 32,
+  },
+  backButton: {
+    backgroundColor: "#3B82F6",
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 10,
+  },
+  backButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
 });
