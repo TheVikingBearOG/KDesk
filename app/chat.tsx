@@ -176,30 +176,27 @@ export default function ChatScreen() {
   const handleTextChange = (text: string) => {
     setMessageText(text);
     
-    const beforeCursor = text.substring(0, cursorPosition);
+    const effectiveCursor = text.length > messageText.length ? text.length : cursorPosition;
+    const beforeCursor = text.substring(0, effectiveCursor);
     const lastAtIndex = beforeCursor.lastIndexOf("@");
     const lastHashIndex = beforeCursor.lastIndexOf("#");
-    const lastSpaceAfterAt = beforeCursor.lastIndexOf(" ", cursorPosition);
-    const lastSpaceAfterHash = beforeCursor.lastIndexOf(" ", cursorPosition);
+    const lastSpaceAfterAt = beforeCursor.substring(lastAtIndex + 1).indexOf(" ");
+    const lastSpaceAfterHash = beforeCursor.substring(lastHashIndex + 1).indexOf(" ");
     
-    if (lastAtIndex !== -1 && lastAtIndex > lastSpaceAfterAt) {
+    if (lastAtIndex !== -1 && lastSpaceAfterAt === -1) {
       const textAfterAt = beforeCursor.substring(lastAtIndex + 1);
-      if (!textAfterAt.includes(" ")) {
-        setMentionQuery(textAfterAt);
-        setShowMentions(true);
-        setShowTickets(false);
-        return;
-      }
+      setMentionQuery(textAfterAt);
+      setShowMentions(true);
+      setShowTickets(false);
+      return;
     }
     
-    if (lastHashIndex !== -1 && lastHashIndex > lastSpaceAfterHash) {
+    if (lastHashIndex !== -1 && lastSpaceAfterHash === -1 && lastHashIndex > lastAtIndex) {
       const textAfterHash = beforeCursor.substring(lastHashIndex + 1);
-      if (!textAfterHash.includes(" ")) {
-        setTicketQuery(textAfterHash);
-        setShowTickets(true);
-        setShowMentions(false);
-        return;
-      }
+      setTicketQuery(textAfterHash);
+      setShowTickets(true);
+      setShowMentions(false);
+      return;
     }
     
     setShowMentions(false);
