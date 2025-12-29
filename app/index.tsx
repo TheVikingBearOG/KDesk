@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Settings, Search, AlertCircle, Clock, CheckCircle, Archive, MessageCircle } from "lucide-react-native";
+import { Search, AlertCircle, Clock, CheckCircle, Archive } from "lucide-react-native";
 import { trpc } from "@/lib/trpc";
 import type { Ticket, TicketStatus, TicketPriority } from "@/backend/types/ticket";
 
@@ -150,22 +150,6 @@ export default function DashboardScreen() {
           <Text style={styles.headerTitle}>Dashboard</Text>
           <Text style={styles.headerSubtitle}>Welcome to KDesk Support System</Text>
         </View>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => router.push("/chat")}
-            activeOpacity={0.7}
-          >
-            <MessageCircle size={24} color="#1F2937" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => router.push("/settings")}
-            activeOpacity={0.7}
-          >
-            <Settings size={24} color="#1F2937" />
-          </TouchableOpacity>
-        </View>
       </View>
 
       <View style={styles.statsContainer}>
@@ -278,9 +262,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3F4F6",
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 20,
     backgroundColor: "#FFFFFF",
