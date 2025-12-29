@@ -17,6 +17,7 @@ import {
   Settings,
   Bell,
   X,
+  BarChart3,
 } from "lucide-react-native";
 import { trpc } from "@/lib/trpc";
 
@@ -31,6 +32,7 @@ const MENU_ITEMS: MenuItem[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/" },
   { id: "tickets", label: "Tickets", icon: Ticket, path: "/tickets" },
   { id: "chat", label: "Team Chat", icon: MessageSquare, path: "/chat" },
+  { id: "statistics", label: "Statistics", icon: BarChart3, path: "/statistics" },
 ];
 
 export default function Sidebar() {
