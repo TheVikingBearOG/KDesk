@@ -15,7 +15,7 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient();
 
 function RootLayoutNav() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -23,13 +23,20 @@ function RootLayoutNav() {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === "login";
+    const inChangePassword = segments[0] === "change-password";
 
     if (!isAuthenticated && !inAuthGroup) {
       router.replace("/login");
     } else if (isAuthenticated && inAuthGroup) {
-      router.replace("/");
+      if (user?.mustChangePassword) {
+        router.replace("/change-password");
+      } else {
+        router.replace("/");
+      }
+    } else if (isAuthenticated && user?.mustChangePassword && !inChangePassword) {
+      router.replace("/change-password");
     }
-  }, [isAuthenticated, segments, isLoading, router]);
+  }, [isAuthenticated, segments, isLoading, router, user]);
 
   if (isLoading) {
     return (
@@ -42,16 +49,18 @@ function RootLayoutNav() {
   if (Platform.OS === "web") {
     return (
       <View style={styles.container}>
-        {isAuthenticated && <Sidebar />}
-        <View style={[styles.mainContent, !isAuthenticated && styles.mainContentFullWidth]}>
+        {isAuthenticated && !user?.mustChangePassword && <Sidebar />}
+        <View style={[styles.mainContent, (!isAuthenticated || user?.mustChangePassword) && styles.mainContentFullWidth]}>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="login" />
+            <Stack.Screen name="change-password" />
             <Stack.Screen name="index" />
             <Stack.Screen name="tickets" />
             <Stack.Screen name="ticket/[id]" />
             <Stack.Screen name="settings" />
             <Stack.Screen name="chat" />
             <Stack.Screen name="statistics" />
+            <Stack.Screen name="staff/[id]" />
             <Stack.Screen name="submit" options={{ presentation: "modal" }} />
           </Stack>
         </View>
@@ -62,12 +71,14 @@ function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerBackTitle: "Back" }}>
       <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="change-password" options={{ headerShown: false }} />
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="tickets" options={{ headerShown: false }} />
       <Stack.Screen name="ticket/[id]" options={{ title: "Ticket Details" }} />
       <Stack.Screen name="settings" options={{ title: "Settings" }} />
       <Stack.Screen name="chat" options={{ title: "Team Chat" }} />
       <Stack.Screen name="statistics" options={{ title: "Statistics" }} />
+      <Stack.Screen name="staff/[id]" options={{ title: "Staff Details" }} />
       <Stack.Screen name="submit" options={{ title: "Submit Ticket", presentation: "modal" }} />
     </Stack>
   );

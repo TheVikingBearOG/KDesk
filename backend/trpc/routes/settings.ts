@@ -59,6 +59,8 @@ export const mockStaff: User[] = [
     role: "staff",
     departmentId: "dept1",
     isActive: true,
+    password: "password123",
+    mustChangePassword: false,
   },
   {
     id: "tech2",
@@ -67,6 +69,8 @@ export const mockStaff: User[] = [
     role: "staff",
     departmentId: "dept1",
     isActive: true,
+    password: "password123",
+    mustChangePassword: false,
   },
   {
     id: "tech3",
@@ -75,6 +79,8 @@ export const mockStaff: User[] = [
     role: "staff",
     departmentId: "dept2",
     isActive: true,
+    password: "password123",
+    mustChangePassword: false,
   },
 ];
 
@@ -137,6 +143,7 @@ export const settingsRouter = createTRPCRouter({
         name: z.string(),
         role: z.enum(["staff", "admin"]),
         departmentId: z.string().optional(),
+        password: z.string().min(6),
       }),
     )
     .mutation(({ input }) => {
@@ -147,6 +154,8 @@ export const settingsRouter = createTRPCRouter({
         role: input.role,
         departmentId: input.departmentId,
         isActive: true,
+        password: input.password,
+        mustChangePassword: true,
       };
       mockStaff.push(newStaff);
       return newStaff;
@@ -199,5 +208,26 @@ export const settingsRouter = createTRPCRouter({
     .mutation(({ input }) => {
       Object.assign(mockBranding, input);
       return mockBranding;
+    }),
+
+  changePassword: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        currentPassword: z.string(),
+        newPassword: z.string(),
+      }),
+    )
+    .mutation(({ input }) => {
+      const staff = mockStaff.find((s) => s.id === input.userId);
+      if (!staff) {
+        throw new Error("User not found");
+      }
+      if (staff.password !== input.currentPassword) {
+        throw new Error("Current password is incorrect");
+      }
+      staff.password = input.newPassword;
+      staff.mustChangePassword = false;
+      return { success: true };
     }),
 });

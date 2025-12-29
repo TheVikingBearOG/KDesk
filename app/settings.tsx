@@ -41,6 +41,7 @@ export default function SettingsScreen() {
   const [showTechModal, setShowTechModal] = useState(false);
   const [techName, setTechName] = useState("");
   const [techEmail, setTechEmail] = useState("");
+  const [techPassword, setTechPassword] = useState("");
   const [staffRole, setStaffRole] = useState<"staff" | "admin">("staff");
   const [techDepartment, setTechDepartment] = useState<string | undefined>();
 
@@ -71,10 +72,11 @@ export default function SettingsScreen() {
       setShowTechModal(false);
       setTechName("");
       setTechEmail("");
+      setTechPassword("");
       setStaffRole("staff");
       setTechDepartment(undefined);
       utils.settings.listStaff.invalidate();
-      Alert.alert("Success", "User created successfully");
+      Alert.alert("Success", "User created successfully. They must change their password on first login.");
     },
     onError: () => {
       Alert.alert("Error", "Failed to create user");
@@ -146,13 +148,18 @@ export default function SettingsScreen() {
   };
 
   const handleCreateStaff = () => {
-    if (!techName || !techEmail) {
+    if (!techName || !techEmail || !techPassword) {
       Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+    if (techPassword.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters");
       return;
     }
     createStaffMutation.mutate({
       name: techName,
       email: techEmail,
+      password: techPassword,
       role: staffRole,
       departmentId: techDepartment,
     });
@@ -659,6 +666,20 @@ export default function SettingsScreen() {
               </View>
 
               <View style={styles.field}>
+                <Text style={styles.label}>Initial Password</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Minimum 6 characters"
+                  placeholderTextColor="#9CA3AF"
+                  value={techPassword}
+                  onChangeText={setTechPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
+                <Text style={styles.helperText}>User will be required to change password on first login</Text>
+              </View>
+
+              <View style={styles.field}>
                 <Text style={styles.label}>Role</Text>
                 <View style={styles.pickerContainer}>
                   <TouchableOpacity
@@ -842,6 +863,12 @@ const styles = StyleSheet.create({
     color: "#1F2937",
     borderWidth: 1,
     borderColor: "#E5E7EB",
+  },
+  helperText: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginTop: 6,
+    lineHeight: 16,
   },
   textArea: {
     minHeight: 100,

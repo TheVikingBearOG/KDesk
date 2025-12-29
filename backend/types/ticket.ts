@@ -55,6 +55,8 @@ export interface User {
   departmentId?: string;
   avatarUrl?: string;
   isActive: boolean;
+  password: string;
+  mustChangePassword: boolean;
 }
 
 export interface Department {
