@@ -19,9 +19,11 @@ import { Hash, Send, Users, ChevronLeft, Menu, Ticket, Plus, X } from "lucide-re
 import { trpc } from "@/lib/trpc";
 import type { ChatChannel, ChatMessage, TaggableUser } from "@/backend/types/chat";
 import type { Ticket as TicketType } from "@/backend/types/ticket";
+import { useBranding } from "@/contexts/BrandingContext";
 
 export default function ChatScreen() {
   const router = useRouter();
+  const { colors } = useBranding();
   const [selectedChannelId, setSelectedChannelId] = useState<string>("general");
   const [messageText, setMessageText] = useState("");
   const [showChannels, setShowChannels] = useState(true);
@@ -257,7 +259,7 @@ export default function ChatScreen() {
     while ((match = combinedPattern.exec(content)) !== null) {
       if (match.index > lastIndex) {
         parts.push(
-          <Text key={`text-${lastIndex}`} style={styles.messageContent}>
+          <Text key={`text-${lastIndex}`} style={[styles.messageContent, { color: colors.textPrimary }]}>
             {content.substring(lastIndex, match.index)}
           </Text>
         );
@@ -265,7 +267,7 @@ export default function ChatScreen() {
       
       if (match[0].startsWith("@")) {
         parts.push(
-          <Text key={`mention-${match.index}`} style={styles.mention}>
+          <Text key={`mention-${match.index}`} style={[styles.mention, { color: colors.primaryColor, backgroundColor: colors.primaryColor + '20' }]}>
             {match[0]}
           </Text>
         );
@@ -297,7 +299,7 @@ export default function ChatScreen() {
 
     if (lastIndex < content.length) {
       parts.push(
-        <Text key={`text-${lastIndex}`} style={styles.messageContent}>
+        <Text key={`text-${lastIndex}`} style={[styles.messageContent, { color: colors.textPrimary }]}>
           {content.substring(lastIndex)}
         </Text>
       );
@@ -309,12 +311,12 @@ export default function ChatScreen() {
   const renderMessage = ({ item }: { item: ChatMessage }) => (
     <View style={styles.messageContainer}>
       <View style={styles.messageHeader}>
-        <Text style={styles.userName}>{item.userName}</Text>
-        <Text style={styles.userRole}>{item.userRole}</Text>
-        <Text style={styles.messageTime}>{formatMessageTime(item.createdAt)}</Text>
+        <Text style={[styles.userName, { color: colors.textPrimary }]}>{item.userName}</Text>
+        <Text style={[styles.userRole, { backgroundColor: colors.primaryColor }]}>{item.userRole}</Text>
+        <Text style={[styles.messageTime, { color: colors.textSecondary }]}>{formatMessageTime(item.createdAt)}</Text>
       </View>
       {renderMessageContent(item.content)}
-      {item.editedAt && <Text style={styles.editedLabel}>(edited)</Text>}
+      {item.editedAt && <Text style={[styles.editedLabel, { color: colors.textSecondary }]}>(edited)</Text>}
     </View>
   );
 
@@ -322,7 +324,7 @@ export default function ChatScreen() {
     const isSelected = item.id === selectedChannelId;
     return (
       <TouchableOpacity
-        style={[styles.channelItem, isSelected && styles.channelItemSelected]}
+        style={[styles.channelItem, isSelected && { backgroundColor: colors.primaryColor + '20' }]}
         onPress={() => {
           setSelectedChannelId(item.id);
           if (Platform.OS !== "web") {
@@ -331,13 +333,13 @@ export default function ChatScreen() {
         }}
         activeOpacity={0.7}
       >
-        <Hash size={18} color={isSelected ? "#3B82F6" : "#6B7280"} />
+        <Hash size={18} color={isSelected ? colors.primaryColor : colors.textSecondary} />
         <View style={styles.channelInfo}>
-          <Text style={[styles.channelName, isSelected && styles.channelNameSelected]}>
+          <Text style={[styles.channelName, { color: isSelected ? colors.primaryColor : colors.textPrimary, fontWeight: isSelected ? "600" as const : "500" as const }]}>
             {item.name}
           </Text>
           {item.description && (
-            <Text style={styles.channelDescription} numberOfLines={1}>
+            <Text style={[styles.channelDescription, { color: colors.textSecondary }]} numberOfLines={1}>
               {item.description}
             </Text>
           )}
@@ -348,23 +350,23 @@ export default function ChatScreen() {
 
   const renderMentionSuggestion = ({ item }: { item: TaggableUser }) => (
     <TouchableOpacity
-      style={styles.mentionItem}
+      style={[styles.mentionItem, { borderBottomColor: colors.border }]}
       onPress={() => handleMentionSelect(item)}
       activeOpacity={0.7}
     >
-      <View style={styles.mentionUserIcon}>
+      <View style={[styles.mentionUserIcon, { backgroundColor: colors.primaryColor }]}>
         <Text style={styles.mentionUserInitial}>{item.name.charAt(0).toUpperCase()}</Text>
       </View>
       <View style={styles.mentionUserInfo}>
-        <Text style={styles.mentionUserName}>{item.name}</Text>
-        <Text style={styles.mentionUserRole}>{item.role}</Text>
+        <Text style={[styles.mentionUserName, { color: colors.textPrimary }]}>{item.name}</Text>
+        <Text style={[styles.mentionUserRole, { color: colors.textSecondary }]}>{item.role}</Text>
       </View>
     </TouchableOpacity>
   );
 
   const renderTicketSuggestion = ({ item }: { item: TicketType }) => (
     <TouchableOpacity
-      style={styles.mentionItem}
+      style={[styles.mentionItem, { borderBottomColor: colors.border }]}
       onPress={() => handleTicketSelect(item)}
       activeOpacity={0.7}
     >
@@ -372,8 +374,8 @@ export default function ChatScreen() {
         <Ticket size={18} color="#fff" />
       </View>
       <View style={styles.mentionUserInfo}>
-        <Text style={styles.mentionUserName}>#{item.ticketNumber}</Text>
-        <Text style={styles.mentionUserRole} numberOfLines={1}>{item.subject}</Text>
+        <Text style={[styles.mentionUserName, { color: colors.textPrimary }]}>#{item.ticketNumber}</Text>
+        <Text style={[styles.mentionUserRole, { color: colors.textSecondary }]} numberOfLines={1}>{item.subject}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -392,7 +394,7 @@ export default function ChatScreen() {
   const renderInputArea = () => (
     <>
       {showMentions && usersQuery.data && usersQuery.data.length > 0 && (
-        <View style={styles.mentionsDropdown}>
+        <View style={[styles.mentionsDropdown, { backgroundColor: colors.cardBackground, borderTopColor: colors.border }]}>
           <FlatList
             data={usersQuery.data}
             renderItem={renderMentionSuggestion}
@@ -403,7 +405,7 @@ export default function ChatScreen() {
         </View>
       )}
       {showTickets && filteredTickets.length > 0 && (
-        <View style={styles.mentionsDropdown}>
+        <View style={[styles.mentionsDropdown, { backgroundColor: colors.cardBackground, borderTopColor: colors.border }]}>
           <FlatList
             data={filteredTickets}
             renderItem={renderTicketSuggestion}
@@ -413,12 +415,12 @@ export default function ChatScreen() {
           />
         </View>
       )}
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground, borderTopColor: colors.border }]}>
         <TextInput
           ref={inputRef}
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.textPrimary }]}
           placeholder={`Message #${selectedChannel?.name || "channel"}`}
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textSecondary}
           value={messageText}
           onChangeText={handleTextChange}
           onSelectionChange={(e) => setCursorPosition(e.nativeEvent.selection.start)}
@@ -427,7 +429,7 @@ export default function ChatScreen() {
           maxLength={2000}
         />
         <TouchableOpacity
-          style={[styles.sendButton, !messageText.trim() && styles.sendButtonDisabled]}
+          style={[styles.sendButton, { backgroundColor: colors.primaryColor }, !messageText.trim() && styles.sendButtonDisabled]}
           onPress={handleSendMessage}
           disabled={!messageText.trim() || sendMessageMutation.isPending}
           activeOpacity={0.7}
@@ -444,34 +446,34 @@ export default function ChatScreen() {
 
   if (Platform.OS === "web") {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
-        <View style={styles.header}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundColor }]} edges={["top"]}>
+        <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <ChevronLeft size={24} color="#1F2937" />
+            <ChevronLeft size={24} color={colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Team Chat</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Team Chat</Text>
           <View style={styles.placeholder} />
         </View>
 
         <View style={styles.webLayout}>
-          <View style={styles.channelsSidebar}>
-            <View style={styles.sidebarHeader}>
+          <View style={[styles.channelsSidebar, { backgroundColor: colors.cardBackground, borderRightColor: colors.border }]}>
+            <View style={[styles.sidebarHeader, { borderBottomColor: colors.border }]}>
               <View style={styles.sidebarHeaderLeft}>
-                <Users size={20} color="#6B7280" />
-                <Text style={styles.sidebarTitle}>Channels</Text>
+                <Users size={20} color={colors.textSecondary} />
+                <Text style={[styles.sidebarTitle, { color: colors.textPrimary }]}>Channels</Text>
               </View>
               {currentUser.role === "admin" && (
                 <TouchableOpacity
                   onPress={() => setShowCreateChannel(true)}
-                  style={styles.createChannelButton}
+                  style={[styles.createChannelButton, { backgroundColor: colors.primaryColor + '20' }]}
                   activeOpacity={0.7}
                 >
-                  <Plus size={18} color="#3B82F6" />
+                  <Plus size={18} color={colors.primaryColor} />
                 </TouchableOpacity>
               )}
             </View>
             {channelsQuery.isLoading ? (
-              <ActivityIndicator size="small" color="#3B82F6" style={styles.loader} />
+              <ActivityIndicator size="small" color={colors.primaryColor} style={styles.loader} />
             ) : (
               <FlatList
                 data={channelsQuery.data || []}
@@ -482,15 +484,15 @@ export default function ChatScreen() {
             )}
           </View>
 
-          <View style={styles.chatArea}>
-            <View style={styles.chatHeader}>
-              <Hash size={20} color="#3B82F6" />
-              <Text style={styles.chatTitle}>{selectedChannel?.name || "Select a channel"}</Text>
+          <View style={[styles.chatArea, { backgroundColor: colors.cardBackground }]}>
+            <View style={[styles.chatHeader, { borderBottomColor: colors.border }]}>
+              <Hash size={20} color={colors.primaryColor} />
+              <Text style={[styles.chatTitle, { color: colors.textPrimary }]}>{selectedChannel?.name || "Select a channel"}</Text>
             </View>
 
             {messagesQuery.isLoading ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#3B82F6" />
+                <ActivityIndicator size="large" color={colors.primaryColor} />
               </View>
             ) : (
               <FlatList
@@ -513,44 +515,44 @@ export default function ChatScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundColor }]} edges={["top"]}>
+      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           onPress={() => (showChannels ? router.back() : setShowChannels(true))}
           style={styles.backButton}
         >
-          <ChevronLeft size={24} color="#1F2937" />
+          <ChevronLeft size={24} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
           {showChannels ? "Team Chat" : `#${selectedChannel?.name}`}
         </Text>
         {!showChannels && (
           <TouchableOpacity onPress={() => setShowChannels(true)} style={styles.menuButton}>
-            <Menu size={24} color="#1F2937" />
+            <Menu size={24} color={colors.textPrimary} />
           </TouchableOpacity>
         )}
         {showChannels && <View style={styles.placeholder} />}
       </View>
 
       {showChannels ? (
-        <View style={styles.mobileChannelsList}>
-          <View style={styles.sidebarHeader}>
+        <View style={[styles.mobileChannelsList, { backgroundColor: colors.cardBackground }]}>
+          <View style={[styles.sidebarHeader, { borderBottomColor: colors.border }]}>
             <View style={styles.sidebarHeaderLeft}>
-              <Users size={20} color="#6B7280" />
-              <Text style={styles.sidebarTitle}>Channels</Text>
+              <Users size={20} color={colors.textSecondary} />
+              <Text style={[styles.sidebarTitle, { color: colors.textPrimary }]}>Channels</Text>
             </View>
             {currentUser.role === "admin" && (
               <TouchableOpacity
                 onPress={() => setShowCreateChannel(true)}
-                style={styles.createChannelButton}
+                style={[styles.createChannelButton, { backgroundColor: colors.primaryColor + '20' }]}
                 activeOpacity={0.7}
               >
-                <Plus size={18} color="#3B82F6" />
+                <Plus size={18} color={colors.primaryColor} />
               </TouchableOpacity>
             )}
           </View>
           {channelsQuery.isLoading ? (
-            <ActivityIndicator size="large" color="#3B82F6" style={styles.loader} />
+            <ActivityIndicator size="large" color={colors.primaryColor} style={styles.loader} />
           ) : (
             <FlatList
               data={channelsQuery.data || []}
@@ -565,7 +567,7 @@ export default function ChatScreen() {
           <View style={styles.flex}>
             {messagesQuery.isLoading ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#3B82F6" />
+                <ActivityIndicator size="large" color={colors.primaryColor} />
               </View>
             ) : (
               <FlatList
@@ -590,61 +592,63 @@ export default function ChatScreen() {
         onRequestClose={() => setShowCreateChannel(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Create Channel</Text>
+          <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Create Channel</Text>
               <TouchableOpacity onPress={() => setShowCreateChannel(false)} activeOpacity={0.7}>
-                <X size={24} color="#6B7280" />
+                <X size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
             <ScrollView style={styles.modalBody}>
               <View style={styles.field}>
-                <Text style={styles.label}>Channel Name</Text>
+                <Text style={[styles.label, { color: colors.textPrimary }]}>Channel Name</Text>
                 <TextInput
-                  style={styles.modalInput}
+                  style={[styles.modalInput, { backgroundColor: colors.inputBackground, color: colors.textPrimary, borderColor: colors.border }]}
                   placeholder="e.g., Product Team"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.textSecondary}
                   value={channelName}
                   onChangeText={setChannelName}
                 />
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.label}>Department</Text>
+                <Text style={[styles.label, { color: colors.textPrimary }]}>Department</Text>
                 <View style={styles.pickerContainer}>
                   <TouchableOpacity
                     style={[
                       styles.picker,
-                      channelDepartment === "all" && styles.pickerActive,
+                      { backgroundColor: colors.inputBackground, borderColor: colors.border },
+                      channelDepartment === "all" && { backgroundColor: colors.primaryColor + '20', borderColor: colors.primaryColor },
                     ]}
                     onPress={() => setChannelDepartment("all")}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.pickerOption}>All Departments</Text>
+                    <Text style={[styles.pickerOption, { color: colors.textPrimary }]}>All Departments</Text>
                   </TouchableOpacity>
                   {departmentsQuery.data?.map((dept) => (
                     <TouchableOpacity
                       key={dept.id}
                       style={[
                         styles.picker,
-                        channelDepartment === dept.id && styles.pickerActive,
+                        { backgroundColor: colors.inputBackground, borderColor: colors.border },
+                        channelDepartment === dept.id && { backgroundColor: colors.primaryColor + '20', borderColor: colors.primaryColor },
                       ]}
                       onPress={() => setChannelDepartment(dept.id)}
                       activeOpacity={0.7}
                     >
-                      <Text style={styles.pickerOption}>{dept.name}</Text>
+                      <Text style={[styles.pickerOption, { color: colors.textPrimary }]}>{dept.name}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.label}>Description (Optional)</Text>
+                <Text style={[styles.label, { color: colors.textPrimary }]}>Description (Optional)</Text>
                 <TextInput
-                  style={[styles.modalInput, styles.modalTextArea]}
+                  style={[styles.modalInput, styles.modalTextArea, { backgroundColor: colors.inputBackground, color: colors.textPrimary, borderColor: colors.border }]}
                   placeholder="What's this channel about?"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.textSecondary}
                   value={channelDescription}
                   onChangeText={setChannelDescription}
                   multiline
@@ -659,14 +663,14 @@ export default function ChatScreen() {
                   onPress={() => setIsPrivateChannel(!isPrivateChannel)}
                   activeOpacity={0.7}
                 >
-                  <View style={[styles.checkbox, isPrivateChannel && styles.checkboxActive]}>
+                  <View style={[styles.checkbox, isPrivateChannel && { borderColor: colors.primaryColor, backgroundColor: colors.primaryColor }]}>
                     {isPrivateChannel && (
                       <View style={styles.checkboxInner} />
                     )}
                   </View>
                   <View style={styles.checkboxTextContainer}>
-                    <Text style={styles.checkboxLabel}>Private Channel</Text>
-                    <Text style={styles.checkboxDescription}>
+                    <Text style={[styles.checkboxLabel, { color: colors.textPrimary }]}>Private Channel</Text>
+                    <Text style={[styles.checkboxDescription, { color: colors.textSecondary }]}>
                       Only invited members can see this channel
                     </Text>
                   </View>
@@ -674,7 +678,7 @@ export default function ChatScreen() {
               </View>
 
               <TouchableOpacity
-                style={[styles.modalButton, createChannelMutation.isPending && styles.modalButtonDisabled]}
+                style={[styles.modalButton, { backgroundColor: colors.primaryColor }, createChannelMutation.isPending && styles.modalButtonDisabled]}
                 onPress={handleCreateChannel}
                 disabled={createChannelMutation.isPending}
                 activeOpacity={0.7}
@@ -696,7 +700,6 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
   },
   header: {
     flexDirection: "row" as const,
@@ -704,9 +707,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between" as const,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
   },
   backButton: {
     padding: 4,
@@ -717,7 +718,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "600" as const,
-    color: "#1F2937",
   },
   placeholder: {
     width: 32,
@@ -728,9 +728,7 @@ const styles = StyleSheet.create({
   },
   channelsSidebar: {
     width: 280,
-    backgroundColor: "#fff",
     borderRightWidth: 1,
-    borderRightColor: "#E5E7EB",
   },
   sidebarHeader: {
     flexDirection: "row" as const,
@@ -738,7 +736,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between" as const,
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
   },
   sidebarHeaderLeft: {
     flexDirection: "row" as const,
@@ -749,14 +746,12 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#EFF6FF",
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
   sidebarTitle: {
     fontSize: 16,
     fontWeight: "600" as const,
-    color: "#1F2937",
   },
   channelsList: {
     padding: 8,
@@ -769,29 +764,19 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 4,
   },
-  channelItemSelected: {
-    backgroundColor: "#EFF6FF",
-  },
   channelInfo: {
     flex: 1,
   },
   channelName: {
     fontSize: 15,
     fontWeight: "500" as const,
-    color: "#374151",
-  },
-  channelNameSelected: {
-    color: "#3B82F6",
-    fontWeight: "600" as const,
   },
   channelDescription: {
     fontSize: 12,
-    color: "#6B7280",
     marginTop: 2,
   },
   chatArea: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   chatHeader: {
     flexDirection: "row" as const,
@@ -799,12 +784,10 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
   },
   chatTitle: {
     fontSize: 18,
     fontWeight: "600" as const,
-    color: "#1F2937",
   },
   messagesList: {
     padding: 16,
@@ -822,31 +805,25 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: "#1F2937",
   },
   userRole: {
     fontSize: 11,
     fontWeight: "500" as const,
     color: "#fff",
-    backgroundColor: "#3B82F6",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
   messageTime: {
     fontSize: 12,
-    color: "#9CA3AF",
   },
   messageContent: {
     fontSize: 15,
-    color: "#374151",
     lineHeight: 22,
   },
   mention: {
     fontSize: 15,
-    color: "#3B82F6",
     fontWeight: "600" as const,
-    backgroundColor: "#EFF6FF",
     paddingHorizontal: 4,
     borderRadius: 3,
     lineHeight: 22,
@@ -863,14 +840,11 @@ const styles = StyleSheet.create({
   },
   editedLabel: {
     fontSize: 11,
-    color: "#9CA3AF",
     marginTop: 4,
     fontStyle: "italic" as const,
   },
   mentionsDropdown: {
-    backgroundColor: "#fff",
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
     maxHeight: 200,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -2 },
@@ -887,13 +861,11 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
   },
   mentionUserIcon: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#3B82F6",
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
@@ -908,11 +880,9 @@ const styles = StyleSheet.create({
   mentionUserName: {
     fontSize: 15,
     fontWeight: "500" as const,
-    color: "#1F2937",
   },
   mentionUserRole: {
     fontSize: 12,
-    color: "#6B7280",
     marginTop: 2,
   },
   inputContainer: {
@@ -920,39 +890,31 @@ const styles = StyleSheet.create({
     alignItems: "flex-end" as const,
     gap: 8,
     padding: 16,
-    backgroundColor: "#fff",
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
   },
   input: {
     flex: 1,
-    backgroundColor: "#F3F4F6",
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 15,
-    color: "#1F2937",
     maxHeight: 100,
   },
   modalInput: {
-    backgroundColor: "#F9FAFB",
     borderRadius: 10,
     padding: 14,
     fontSize: 15,
-    color: "#1F2937",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
   },
   sendButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#3B82F6",
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
   sendButtonDisabled: {
-    backgroundColor: "#9CA3AF",
+    opacity: 0.5,
   },
   loadingContainer: {
     flex: 1,
@@ -964,7 +926,6 @@ const styles = StyleSheet.create({
   },
   mobileChannelsList: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   flex: {
     flex: 1,
@@ -975,7 +936,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end" as const,
   },
   modalContent: {
-    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: "90%",
@@ -986,12 +946,10 @@ const styles = StyleSheet.create({
     alignItems: "center" as const,
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: "700" as const,
-    color: "#1F2937",
   },
   modalBody: {
     padding: 20,
@@ -1002,7 +960,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: "#374151",
     marginBottom: 8,
   },
   modalTextArea: {
@@ -1014,18 +971,11 @@ const styles = StyleSheet.create({
   },
   picker: {
     padding: 14,
-    backgroundColor: "#F9FAFB",
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  pickerActive: {
-    backgroundColor: "#EFF6FF",
-    borderColor: "#3B82F6",
   },
   pickerOption: {
     fontSize: 15,
-    color: "#1F2937",
   },
   checkboxRow: {
     flexDirection: "row" as const,
@@ -1042,10 +992,6 @@ const styles = StyleSheet.create({
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
-  checkboxActive: {
-    borderColor: "#3B82F6",
-    backgroundColor: "#3B82F6",
-  },
   checkboxInner: {
     width: 12,
     height: 12,
@@ -1058,15 +1004,12 @@ const styles = StyleSheet.create({
   checkboxLabel: {
     fontSize: 15,
     fontWeight: "500" as const,
-    color: "#1F2937",
     marginBottom: 2,
   },
   checkboxDescription: {
     fontSize: 13,
-    color: "#6B7280",
   },
   modalButton: {
-    backgroundColor: "#3B82F6",
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: "center" as const,
