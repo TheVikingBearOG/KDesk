@@ -55,6 +55,14 @@ export default function Sidebar() {
     { enabled: showNotifications }
   );
 
+  const { data: latestNotification } = trpc.notifications.list.useQuery(
+    { userId: currentUserId },
+    { 
+      refetchInterval: 5000,
+      select: (data) => data[0]
+    }
+  );
+
   const markAsReadMutation = trpc.notifications.markAsRead.useMutation();
   const markAllAsReadMutation = trpc.notifications.markAllAsRead.useMutation();
   const deleteMutation = trpc.notifications.delete.useMutation();
@@ -112,6 +120,13 @@ export default function Sidebar() {
       </View>
 
       <View style={styles.topNotificationSection}>
+        {latestNotification && (
+          <View style={styles.latestNotificationPreview}>
+            <Text style={styles.latestNotificationText} numberOfLines={1}>
+              {latestNotification.title}
+            </Text>
+          </View>
+        )}
         <TouchableOpacity
           style={styles.notificationButton}
           onPress={() => setShowNotifications(true)}
@@ -375,9 +390,23 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   topNotificationSection: {
     padding: 16,
-    alignItems: "flex-end",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  latestNotificationPreview: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: colors.inputBackground,
+    borderRadius: 8,
+  },
+  latestNotificationText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.textSecondary,
   },
   menuSection: {
     flex: 1,
