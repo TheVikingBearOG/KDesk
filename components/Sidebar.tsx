@@ -113,7 +113,7 @@ export default function Sidebar() {
     <View style={styles.sidebar}>
       <View style={styles.logoSection}>
         <Image
-          source={{ uri: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/ovaiu6y9bwlask900d0b6" }}
+          source={{ uri: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/viv3xwwna0e1id45vv721" }}
           style={styles.logo}
           resizeMode="contain"
         />
