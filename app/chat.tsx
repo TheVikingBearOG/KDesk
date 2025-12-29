@@ -20,10 +20,12 @@ import { trpc } from "@/lib/trpc";
 import type { ChatChannel, ChatMessage, TaggableUser, TaggableDepartment } from "@/backend/types/chat";
 import type { Ticket as TicketType } from "@/backend/types/ticket";
 import { useBranding } from "@/contexts/BrandingContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ChatScreen() {
   const router = useRouter();
   const { colors } = useBranding();
+  const { user } = useAuth();
   const [selectedChannelId, setSelectedChannelId] = useState<string>("general");
   const [messageText, setMessageText] = useState("");
   const [showChannels, setShowChannels] = useState(true);
@@ -39,8 +41,6 @@ export default function ChatScreen() {
   const [isPrivateChannel, setIsPrivateChannel] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const inputRef = useRef<TextInput>(null);
-
-  const currentUser = { id: "user1", name: "Current User", role: "admin" as const };
 
   const channelsQuery = trpc.chat.getChannels.useQuery(undefined, {
     refetchInterval: 5000,
@@ -237,7 +237,7 @@ export default function ChatScreen() {
   };
 
   const handleSendMessage = () => {
-    if (messageText.trim() && selectedChannelId) {
+    if (messageText.trim() && selectedChannelId && user) {
       const { userIds, departmentIds } = extractMentions(messageText);
       const ticketReferences = extractTicketReferences(messageText);
       sendMessageMutation.mutate({
@@ -246,8 +246,8 @@ export default function ChatScreen() {
         mentions: userIds.length > 0 ? userIds : undefined,
         departmentMentions: departmentIds.length > 0 ? departmentIds : undefined,
         ticketReferences: ticketReferences.length > 0 ? ticketReferences : undefined,
-        userId: currentUser.id,
-        userName: currentUser.name,
+        userId: user.id,
+        userName: user.name,
       });
     }
   };
@@ -527,7 +527,7 @@ export default function ChatScreen() {
                 <Users size={20} color={colors.textSecondary} />
                 <Text style={[styles.sidebarTitle, { color: colors.textPrimary }]}>Channels</Text>
               </View>
-              {currentUser.role === "admin" && (
+              {(user?.role === "Administrator" || user?.role === "admin") && (
                 <TouchableOpacity
                   onPress={() => setShowCreateChannel(true)}
                   style={[styles.createChannelButton, { backgroundColor: colors.primaryColor + '20' }]}
@@ -606,7 +606,7 @@ export default function ChatScreen() {
               <Users size={20} color={colors.textSecondary} />
               <Text style={[styles.sidebarTitle, { color: colors.textPrimary }]}>Channels</Text>
             </View>
-            {currentUser.role === "admin" && (
+            {(user?.role === "Administrator" || user?.role === "admin") && (
               <TouchableOpacity
                 onPress={() => setShowCreateChannel(true)}
                 style={[styles.createChannelButton, { backgroundColor: colors.primaryColor + '20' }]}
