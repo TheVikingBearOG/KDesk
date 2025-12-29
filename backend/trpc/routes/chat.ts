@@ -38,32 +38,7 @@ const mockChannels: ChatChannel[] = [
   },
 ];
 
-const mockUsers: TaggableUser[] = [
-  {
-    id: "user1",
-    name: "Sarah Agent",
-    role: "Agent",
-    email: "sarah@example.com",
-  },
-  {
-    id: "user2",
-    name: "Tom Support",
-    role: "Agent",
-    email: "tom@example.com",
-  },
-  {
-    id: "user3",
-    name: "Lisa Manager",
-    role: "Admin",
-    email: "lisa@example.com",
-  },
-  {
-    id: "user4",
-    name: "Mike Tech",
-    role: "Staff",
-    email: "mike@example.com",
-  },
-];
+
 
 const mockMessages: ChatMessage[] = [
   {
@@ -193,11 +168,20 @@ export const chatRouter = createTRPCRouter({
   getUsersForTagging: publicProcedure
     .input(z.object({ query: z.string().optional() }))
     .query(({ input }) => {
+      const taggableUsers: TaggableUser[] = mockStaff
+        .filter((u: User) => u.isActive)
+        .map((user: User) => ({
+          id: user.id,
+          name: user.name,
+          role: user.role === "admin" ? "Administrator" : "Staff",
+          email: user.email,
+        }));
+
       if (!input.query) {
-        return mockUsers;
+        return taggableUsers;
       }
       const lowerQuery = input.query.toLowerCase();
-      return mockUsers.filter(
+      return taggableUsers.filter(
         (user) =>
           user.name.toLowerCase().includes(lowerQuery) ||
           user.email.toLowerCase().includes(lowerQuery)
