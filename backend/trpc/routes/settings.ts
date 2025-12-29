@@ -53,13 +53,33 @@ const mockDepartments: Department[] = [
 
 export const mockStaff: User[] = [
   {
+    id: "admin1",
+    email: "admin@company.com",
+    name: "Admin User",
+    role: "admin",
+    departmentId: undefined,
+    isActive: true,
+    password: "password",
+    mustChangePassword: false,
+  },
+  {
     id: "tech1",
     email: "sarah@company.com",
     name: "Sarah Agent",
     role: "staff",
     departmentId: "dept1",
     isActive: true,
-    password: "password123",
+    password: "password",
+    mustChangePassword: false,
+  },
+  {
+    id: "agent1",
+    email: "agent@company.com",
+    name: "Agent User",
+    role: "staff",
+    departmentId: "dept3",
+    isActive: true,
+    password: "password",
     mustChangePassword: false,
   },
   {
