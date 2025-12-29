@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Platform,
   Modal,
+  Linking,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { Send, StickyNote, UserCircle, Building2, X, Briefcase, ExternalLink } from "lucide-react-native";
@@ -118,13 +119,18 @@ export default function TicketDetailScreen() {
     });
   };
 
-  const openWorkOrder = () => {
+  const openWorkOrder = async () => {
     if (ticket?.workOrderId) {
       const url = `https://verk.kd.is/works/${ticket.workOrderId}`;
       if (Platform.OS === "web") {
         window.open(url, "_blank");
       } else {
-        console.log("Opening URL:", url);
+        const supported = await Linking.canOpenURL(url);
+        if (supported) {
+          await Linking.openURL(url);
+        } else {
+          console.log("Cannot open URL:", url);
+        }
       }
     }
   };
