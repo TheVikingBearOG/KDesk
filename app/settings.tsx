@@ -103,8 +103,9 @@ export default function SettingsScreen() {
       await refetchBranding();
       Alert.alert("Success", "Branding updated successfully");
     },
-    onError: () => {
-      Alert.alert("Error", "Failed to update branding");
+    onError: (error) => {
+      console.error("Branding update error:", error);
+      Alert.alert("Error", `Failed to update branding: ${error.message}`);
     },
   });
 
