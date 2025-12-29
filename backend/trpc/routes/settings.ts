@@ -18,18 +18,16 @@ const mockConfig: MailboxConfig = {
   isActive: false,
 };
 
+type ThemeType = "light" | "dark" | "plex";
+
 interface BrandingConfig {
   companyName: string;
-  primaryColor: string;
-  accentColor: string;
-  backgroundColor: string;
+  theme: ThemeType;
 }
 
 const mockBranding: BrandingConfig = {
   companyName: "KDesk",
-  primaryColor: "#3B82F6",
-  accentColor: "#10B981",
-  backgroundColor: "#F9FAFB",
+  theme: "light",
 };
 
 const mockDepartments: Department[] = [
@@ -195,9 +193,7 @@ export const settingsRouter = createTRPCRouter({
     .input(
       z.object({
         companyName: z.string(),
-        primaryColor: z.string(),
-        accentColor: z.string(),
-        backgroundColor: z.string(),
+        theme: z.enum(["light", "dark", "plex"]),
       }),
     )
     .mutation(({ input }) => {

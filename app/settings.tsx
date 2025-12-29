@@ -15,8 +15,10 @@ import { Check, Plus, UserCircle, Building2, X, Trash2 } from "lucide-react-nati
 import { trpc } from "@/lib/trpc";
 import { useBranding } from "@/contexts/BrandingContext";
 
+type ThemeType = "light" | "dark" | "plex";
+
 export default function SettingsScreen() {
-  const { branding, refetch: refetchBranding } = useBranding();
+  const { colors, refetch: refetchBranding } = useBranding();
   const [activeTab, setActiveTab] = useState<"email" | "technicians" | "departments" | "branding">("email");
   const [supportEmail, setSupportEmail] = useState("");
   const [imapHost, setImapHost] = useState("");
@@ -40,12 +42,7 @@ export default function SettingsScreen() {
   const [deptDescription, setDeptDescription] = useState("");
 
   const [companyName, setCompanyName] = useState("");
-  const [primaryColor, setPrimaryColor] = useState("");
-  const [accentColor, setAccentColor] = useState("");
-  const [backgroundColor, setBackgroundColor] = useState("");
-  const [showColorPicker, setShowColorPicker] = useState(false);
-  const [activeColorField, setActiveColorField] = useState<"primary" | "accent" | "background" | null>(null);
-  const [tempColor, setTempColor] = useState("");
+  const [selectedTheme, setSelectedTheme] = useState<ThemeType>("light");
 
   const utils = trpc.useUtils();
   const configQuery = trpc.settings.getMailboxConfig.useQuery();
@@ -129,9 +126,7 @@ export default function SettingsScreen() {
   useEffect(() => {
     if (brandingQuery.data) {
       setCompanyName(brandingQuery.data.companyName);
-      setPrimaryColor(brandingQuery.data.primaryColor);
-      setAccentColor(brandingQuery.data.accentColor);
-      setBackgroundColor(brandingQuery.data.backgroundColor);
+      setSelectedTheme(brandingQuery.data.theme);
     }
   }, [brandingQuery.data]);
 
@@ -186,37 +181,35 @@ export default function SettingsScreen() {
   };
 
   const handleSaveBranding = () => {
-    if (!companyName || !primaryColor || !accentColor || !backgroundColor) {
-      Alert.alert("Error", "Please fill in all fields");
+    if (!companyName) {
+      Alert.alert("Error", "Please enter a company name");
       return;
     }
     updateBrandingMutation.mutate({
       companyName,
-      primaryColor,
-      accentColor,
-      backgroundColor,
+      theme: selectedTheme,
     });
   };
 
-  const openColorPicker = (field: "primary" | "accent" | "background") => {
-    setActiveColorField(field);
-    if (field === "primary") setTempColor(primaryColor);
-    else if (field === "accent") setTempColor(accentColor);
-    else setTempColor(backgroundColor);
-    setShowColorPicker(true);
-  };
-
-  const saveColor = () => {
-    if (activeColorField === "primary") setPrimaryColor(tempColor);
-    else if (activeColorField === "accent") setAccentColor(tempColor);
-    else if (activeColorField === "background") setBackgroundColor(tempColor);
-    setShowColorPicker(false);
-  };
-
-  const predefinedColors = [
-    "#3B82F6", "#10B981", "#EF4444", "#F59E0B",
-    "#8B5CF6", "#EC4899", "#06B6D4", "#84CC16",
-    "#1F2937", "#6B7280", "#F9FAFB", "#FFFFFF",
+  const themes = [
+    {
+      id: "light" as const,
+      name: "Light Mode",
+      description: "Clean and bright interface",
+      preview: { bg: "#F9FAFB", primary: "#3B82F6", text: "#1F2937" },
+    },
+    {
+      id: "dark" as const,
+      name: "Dark Mode",
+      description: "Easy on the eyes",
+      preview: { bg: "#111827", primary: "#3B82F6", text: "#F9FAFB" },
+    },
+    {
+      id: "plex" as const,
+      name: "Plex Theme",
+      description: "Inspired by Plex Media Server",
+      preview: { bg: "#1F1F1F", primary: "#E5A00D", text: "#FFFFFF" },
+    },
   ];
 
   if (configQuery.isLoading) {
@@ -514,9 +507,9 @@ export default function SettingsScreen() {
         {activeTab === "branding" && (
           <>
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Company Branding</Text>
+              <Text style={styles.sectionTitle}>Company Information</Text>
               <Text style={styles.sectionDescription}>
-                Customize your company name and color scheme
+                Customize your company name
               </Text>
 
               <View style={styles.field}>
@@ -529,84 +522,44 @@ export default function SettingsScreen() {
                   onChangeText={setCompanyName}
                 />
               </View>
-
-              <View style={styles.field}>
-                <Text style={styles.label}>Primary Color</Text>
-                <View style={styles.colorInputContainer}>
-                  <TextInput
-                    style={[styles.input, { flex: 1 }]}
-                    placeholder="#3B82F6"
-                    placeholderTextColor="#9CA3AF"
-                    value={primaryColor}
-                    onChangeText={setPrimaryColor}
-                    autoCapitalize="none"
-                  />
-                  <TouchableOpacity
-                    style={[styles.colorPreview, { backgroundColor: primaryColor || "#3B82F6" }]}
-                    onPress={() => openColorPicker("primary")}
-                    activeOpacity={0.7}
-                  />
-                </View>
-                <Text style={styles.helperText}>Used for buttons, links, and primary actions</Text>
-              </View>
-
-              <View style={styles.field}>
-                <Text style={styles.label}>Accent Color</Text>
-                <View style={styles.colorInputContainer}>
-                  <TextInput
-                    style={[styles.input, { flex: 1 }]}
-                    placeholder="#10B981"
-                    placeholderTextColor="#9CA3AF"
-                    value={accentColor}
-                    onChangeText={setAccentColor}
-                    autoCapitalize="none"
-                  />
-                  <TouchableOpacity
-                    style={[styles.colorPreview, { backgroundColor: accentColor || "#10B981" }]}
-                    onPress={() => openColorPicker("accent")}
-                    activeOpacity={0.7}
-                  />
-                </View>
-                <Text style={styles.helperText}>Used for success states and accents</Text>
-              </View>
-
-              <View style={styles.field}>
-                <Text style={styles.label}>Background Color</Text>
-                <View style={styles.colorInputContainer}>
-                  <TextInput
-                    style={[styles.input, { flex: 1 }]}
-                    placeholder="#F9FAFB"
-                    placeholderTextColor="#9CA3AF"
-                    value={backgroundColor}
-                    onChangeText={setBackgroundColor}
-                    autoCapitalize="none"
-                  />
-                  <TouchableOpacity
-                    style={[styles.colorPreview, { backgroundColor: backgroundColor || "#F9FAFB" }]}
-                    onPress={() => openColorPicker("background")}
-                    activeOpacity={0.7}
-                  />
-                </View>
-                <Text style={styles.helperText}>Main background color for the app</Text>
-              </View>
             </View>
 
-            <View style={styles.previewSection}>
-              <Text style={styles.sectionTitle}>Preview</Text>
-              <View style={styles.previewContainer}>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Theme</Text>
+              <Text style={styles.sectionDescription}>
+                Choose your preferred color scheme
+              </Text>
+
+              {themes.map((theme) => (
                 <TouchableOpacity
-                  style={[styles.previewButton, { backgroundColor: primaryColor || "#3B82F6" }]}
-                  activeOpacity={0.8}
+                  key={theme.id}
+                  style={[
+                    styles.themeCard,
+                    selectedTheme === theme.id && styles.themeCardActive,
+                  ]}
+                  onPress={() => setSelectedTheme(theme.id)}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.previewButtonText}>Primary Button</Text>
+                  <View style={styles.themePreview}>
+                    <View style={[styles.themePreviewBg, { backgroundColor: theme.preview.bg }]}>
+                      <View style={[styles.themePreviewCard, { backgroundColor: theme.preview.primary }]} />
+                      <View style={[styles.themePreviewText, { backgroundColor: theme.preview.text }]} />
+                      <View style={[styles.themePreviewText, { backgroundColor: theme.preview.text, opacity: 0.6 }]} />
+                    </View>
+                  </View>
+                  <View style={styles.themeInfo}>
+                    <View style={styles.themeHeader}>
+                      <Text style={styles.themeName}>{theme.name}</Text>
+                      {selectedTheme === theme.id && (
+                        <View style={[styles.themeBadge, { backgroundColor: colors.primaryColor }]}>
+                          <Check size={14} color="#FFFFFF" />
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.themeDescription}>{theme.description}</Text>
+                  </View>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.previewButton, { backgroundColor: accentColor || "#10B981" }]}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.previewButtonText}>Accent Button</Text>
-                </TouchableOpacity>
-              </View>
+              ))}
             </View>
           </>
         )}
@@ -635,7 +588,7 @@ export default function SettingsScreen() {
       {activeTab === "branding" && (
         <View style={styles.footer}>
           <TouchableOpacity
-            style={[styles.saveButton, { backgroundColor: branding.primaryColor }, updateBrandingMutation.isPending && styles.saveButtonDisabled]}
+            style={[styles.saveButton, { backgroundColor: colors.primaryColor }, updateBrandingMutation.isPending && styles.saveButtonDisabled]}
             onPress={handleSaveBranding}
             disabled={updateBrandingMutation.isPending}
             activeOpacity={0.8}
@@ -822,65 +775,7 @@ export default function SettingsScreen() {
         </View>
       </Modal>
 
-      <Modal
-        visible={showColorPicker}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowColorPicker(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Choose Color</Text>
-              <TouchableOpacity onPress={() => setShowColorPicker(false)} activeOpacity={0.7}>
-                <X size={24} color="#6B7280" />
-              </TouchableOpacity>
-            </View>
 
-            <ScrollView style={styles.modalBody}>
-              <View style={styles.field}>
-                <Text style={styles.label}>Hex Color</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="#3B82F6"
-                  placeholderTextColor="#9CA3AF"
-                  value={tempColor}
-                  onChangeText={setTempColor}
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.colorPreviewLarge}>
-                <View style={[styles.colorPreviewFull, { backgroundColor: tempColor || "#FFFFFF" }]} />
-              </View>
-
-              <Text style={styles.label}>Quick Presets</Text>
-              <View style={styles.colorGrid}>
-                {predefinedColors.map((color) => (
-                  <TouchableOpacity
-                    key={color}
-                    style={[
-                      styles.colorGridItem,
-                      { backgroundColor: color },
-                      tempColor === color && styles.colorGridItemActive,
-                    ]}
-                    onPress={() => setTempColor(color)}
-                    activeOpacity={0.7}
-                  />
-                ))}
-              </View>
-
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: branding.primaryColor }]}
-                onPress={saveColor}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.modalButtonText}>Apply Color</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -939,43 +834,66 @@ const styles = StyleSheet.create({
     minHeight: 100,
     textAlignVertical: "top",
   },
-  colorInputContainer: {
+  themeCard: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  colorPreview: {
-    width: 48,
-    height: 48,
-    borderRadius: 10,
-    borderWidth: 1,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 2,
     borderColor: "#E5E7EB",
   },
-  helperText: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    marginTop: 6,
+  themeCardActive: {
+    borderColor: "#3B82F6",
+    backgroundColor: "#EFF6FF",
   },
-  previewSection: {
-    backgroundColor: "#FFFFFF",
-    padding: 20,
-    marginBottom: 12,
-  },
-  previewContainer: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 16,
-  },
-  previewButton: {
-    flex: 1,
-    paddingVertical: 14,
+  themePreview: {
+    width: 80,
+    height: 80,
     borderRadius: 10,
-    alignItems: "center",
+    overflow: "hidden",
+    marginRight: 16,
   },
-  previewButtonText: {
-    fontSize: 15,
+  themePreviewBg: {
+    flex: 1,
+    padding: 8,
+    justifyContent: "center",
+    gap: 6,
+  },
+  themePreviewCard: {
+    height: 14,
+    borderRadius: 4,
+  },
+  themePreviewText: {
+    height: 6,
+    borderRadius: 2,
+  },
+  themeInfo: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  themeHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+  themeName: {
+    fontSize: 16,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: "#1F2937",
+  },
+  themeDescription: {
+    fontSize: 13,
+    color: "#6B7280",
+    lineHeight: 18,
+  },
+  themeBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
   footer: {
     backgroundColor: "#FFFFFF",
@@ -1166,31 +1084,5 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#FFFFFF",
   },
-  colorPreviewLarge: {
-    marginBottom: 20,
-  },
-  colorPreviewFull: {
-    height: 120,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  colorGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-    marginTop: 12,
-    marginBottom: 20,
-  },
-  colorGridItem: {
-    width: 60,
-    height: 60,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "transparent",
-  },
-  colorGridItemActive: {
-    borderColor: "#3B82F6",
-    borderWidth: 3,
-  },
+
 });

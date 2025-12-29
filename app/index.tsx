@@ -41,7 +41,7 @@ const PRIORITY_COLORS: Record<TicketPriority, string> = {
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { branding } = useBranding();
+  const { colors } = useBranding();
   const [selectedFilter, setSelectedFilter] = useState<TicketStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -146,7 +146,7 @@ export default function DashboardScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: branding.backgroundColor }]} edges={Platform.OS === "web" ? [] : ["top"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundColor }]} edges={Platform.OS === "web" ? [] : ["top"]}>
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>Dashboard</Text>

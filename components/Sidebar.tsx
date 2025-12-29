@@ -39,7 +39,7 @@ const MENU_ITEMS: MenuItem[] = [
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { branding } = useBranding();
+  const { colors } = useBranding();
   const [showNotifications, setShowNotifications] = useState(false);
   const currentUserId = "tech1";
 
@@ -145,7 +145,7 @@ export default function Sidebar() {
             >
               <Icon
                 size={20}
-                color={active ? branding.primaryColor : "#6B7280"}
+                color={active ? colors.primaryColor : "#6B7280"}
                 strokeWidth={2}
               />
               <Text style={[styles.menuText, active && styles.menuTextActive]}>
@@ -167,7 +167,7 @@ export default function Sidebar() {
         >
           <Settings
             size={20}
-            color={isActive("/settings") ? branding.primaryColor : "#6B7280"}
+            color={isActive("/settings") ? colors.primaryColor : "#6B7280"}
             strokeWidth={2}
           />
           <Text
