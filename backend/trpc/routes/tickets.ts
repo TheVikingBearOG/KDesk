@@ -585,6 +585,8 @@ export const ticketsRouter = createTRPCRouter({
 
       if (input.status && input.status !== "all") {
         filtered = filtered.filter((t) => t.status === input.status);
+      } else if (!input.status || input.status === "all") {
+        filtered = filtered.filter((t) => t.status !== "closed");
       }
 
       if (input.search) {
