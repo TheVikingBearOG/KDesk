@@ -20,6 +20,7 @@ import {
   BarChart3,
 } from "lucide-react-native";
 import { trpc } from "@/lib/trpc";
+import { useBranding } from "@/contexts/BrandingContext";
 
 interface MenuItem {
   id: string;
@@ -38,6 +39,7 @@ const MENU_ITEMS: MenuItem[] = [
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const { branding } = useBranding();
   const [showNotifications, setShowNotifications] = useState(false);
   const currentUserId = "tech1";
 
@@ -143,7 +145,7 @@ export default function Sidebar() {
             >
               <Icon
                 size={20}
-                color={active ? "#3B82F6" : "#6B7280"}
+                color={active ? branding.primaryColor : "#6B7280"}
                 strokeWidth={2}
               />
               <Text style={[styles.menuText, active && styles.menuTextActive]}>
@@ -165,7 +167,7 @@ export default function Sidebar() {
         >
           <Settings
             size={20}
-            color={isActive("/settings") ? "#3B82F6" : "#6B7280"}
+            color={isActive("/settings") ? branding.primaryColor : "#6B7280"}
             strokeWidth={2}
           />
           <Text

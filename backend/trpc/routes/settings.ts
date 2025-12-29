@@ -18,6 +18,18 @@ const mockConfig: MailboxConfig = {
   isActive: false,
 };
 
+interface BrandingConfig {
+  companyName: string;
+  primaryColor: string;
+  accentColor: string;
+}
+
+const mockBranding: BrandingConfig = {
+  companyName: "KDesk",
+  primaryColor: "#3B82F6",
+  accentColor: "#10B981",
+};
+
 const mockDepartments: Department[] = [
   {
     id: "dept1",
@@ -171,5 +183,22 @@ export const settingsRouter = createTRPCRouter({
       }
       tech.isActive = false;
       return { success: true };
+    }),
+
+  getBranding: publicProcedure.query(() => {
+    return mockBranding;
+  }),
+
+  updateBranding: publicProcedure
+    .input(
+      z.object({
+        companyName: z.string(),
+        primaryColor: z.string(),
+        accentColor: z.string(),
+      }),
+    )
+    .mutation(({ input }) => {
+      Object.assign(mockBranding, input);
+      return mockBranding;
     }),
 });

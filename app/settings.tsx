@@ -13,9 +13,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Check, Plus, UserCircle, Building2, X, Trash2 } from "lucide-react-native";
 import { trpc } from "@/lib/trpc";
+import { useBranding } from "@/contexts/BrandingContext";
 
 export default function SettingsScreen() {
-  const [activeTab, setActiveTab] = useState<"email" | "technicians" | "departments">("email");
+  const { branding, refetch: refetchBranding } = useBranding();
+  const [activeTab, setActiveTab] = useState<"email" | "technicians" | "departments" | "branding">("email");
   const [supportEmail, setSupportEmail] = useState("");
   const [imapHost, setImapHost] = useState("");
   const [imapPort, setImapPort] = useState("");
@@ -37,10 +39,15 @@ export default function SettingsScreen() {
   const [deptName, setDeptName] = useState("");
   const [deptDescription, setDeptDescription] = useState("");
 
+  const [companyName, setCompanyName] = useState("");
+  const [primaryColor, setPrimaryColor] = useState("");
+  const [accentColor, setAccentColor] = useState("");
+
   const utils = trpc.useUtils();
   const configQuery = trpc.settings.getMailboxConfig.useQuery();
   const techniciansQuery = trpc.settings.listTechnicians.useQuery();
   const departmentsQuery = trpc.settings.listDepartments.useQuery();
+  const brandingQuery = trpc.settings.getBranding.useQuery();
 
   const updateMutation = trpc.settings.updateMailboxConfig.useMutation({
     onSuccess: () => {
@@ -89,6 +96,17 @@ export default function SettingsScreen() {
     },
   });
 
+  const updateBrandingMutation = trpc.settings.updateBranding.useMutation({
+    onSuccess: async () => {
+      await utils.settings.getBranding.invalidate();
+      await refetchBranding();
+      Alert.alert("Success", "Branding updated successfully");
+    },
+    onError: () => {
+      Alert.alert("Error", "Failed to update branding");
+    },
+  });
+
   useEffect(() => {
     if (configQuery.data) {
       setSupportEmail(configQuery.data.supportEmail);
@@ -103,6 +121,14 @@ export default function SettingsScreen() {
       setEmailSignature(configQuery.data.emailSignature);
     }
   }, [configQuery.data]);
+
+  useEffect(() => {
+    if (brandingQuery.data) {
+      setCompanyName(brandingQuery.data.companyName);
+      setPrimaryColor(brandingQuery.data.primaryColor);
+      setAccentColor(brandingQuery.data.accentColor);
+    }
+  }, [brandingQuery.data]);
 
   const handleSave = () => {
     updateMutation.mutate({
@@ -154,6 +180,18 @@ export default function SettingsScreen() {
     });
   };
 
+  const handleSaveBranding = () => {
+    if (!companyName || !primaryColor || !accentColor) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+    updateBrandingMutation.mutate({
+      companyName,
+      primaryColor,
+      accentColor,
+    });
+  };
+
   if (configQuery.isLoading) {
     return (
       <View style={styles.centerContent}>
@@ -188,6 +226,15 @@ export default function SettingsScreen() {
         >
           <Text style={[styles.tabText, activeTab === "departments" && styles.tabTextActive]}>
             Departments
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "branding" && styles.tabActive]}
+          onPress={() => setActiveTab("branding")}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.tabText, activeTab === "branding" && styles.tabTextActive]}>
+            Branding
           </Text>
         </TouchableOpacity>
       </View>
@@ -436,6 +483,78 @@ export default function SettingsScreen() {
             )}
           </>
         )}
+
+        {activeTab === "branding" && (
+          <>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Company Branding</Text>
+              <Text style={styles.sectionDescription}>
+                Customize your company name and color scheme
+              </Text>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>Company Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="KDesk"
+                  placeholderTextColor="#9CA3AF"
+                  value={companyName}
+                  onChangeText={setCompanyName}
+                />
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>Primary Color</Text>
+                <View style={styles.colorInputContainer}>
+                  <TextInput
+                    style={[styles.input, { flex: 1 }]}
+                    placeholder="#3B82F6"
+                    placeholderTextColor="#9CA3AF"
+                    value={primaryColor}
+                    onChangeText={setPrimaryColor}
+                    autoCapitalize="none"
+                  />
+                  <View style={[styles.colorPreview, { backgroundColor: primaryColor || "#3B82F6" }]} />
+                </View>
+                <Text style={styles.helperText}>Used for buttons, links, and primary actions</Text>
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>Accent Color</Text>
+                <View style={styles.colorInputContainer}>
+                  <TextInput
+                    style={[styles.input, { flex: 1 }]}
+                    placeholder="#10B981"
+                    placeholderTextColor="#9CA3AF"
+                    value={accentColor}
+                    onChangeText={setAccentColor}
+                    autoCapitalize="none"
+                  />
+                  <View style={[styles.colorPreview, { backgroundColor: accentColor || "#10B981" }]} />
+                </View>
+                <Text style={styles.helperText}>Used for success states and accents</Text>
+              </View>
+            </View>
+
+            <View style={styles.previewSection}>
+              <Text style={styles.sectionTitle}>Preview</Text>
+              <View style={styles.previewContainer}>
+                <TouchableOpacity
+                  style={[styles.previewButton, { backgroundColor: primaryColor || "#3B82F6" }]}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.previewButtonText}>Primary Button</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.previewButton, { backgroundColor: accentColor || "#10B981" }]}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.previewButtonText}>Accent Button</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </>
+        )}
       </ScrollView>
 
       {activeTab === "email" && (
@@ -452,6 +571,26 @@ export default function SettingsScreen() {
               <>
                 <Check size={20} color="#FFFFFF" />
                 <Text style={styles.saveButtonText}>Save Configuration</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {activeTab === "branding" && (
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={[styles.saveButton, { backgroundColor: branding.primaryColor }, updateBrandingMutation.isPending && styles.saveButtonDisabled]}
+            onPress={handleSaveBranding}
+            disabled={updateBrandingMutation.isPending}
+            activeOpacity={0.8}
+          >
+            {updateBrandingMutation.isPending ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <>
+                <Check size={20} color="#FFFFFF" />
+                <Text style={styles.saveButtonText}>Save Branding</Text>
               </>
             )}
           </TouchableOpacity>
@@ -685,6 +824,44 @@ const styles = StyleSheet.create({
   textArea: {
     minHeight: 100,
     textAlignVertical: "top",
+  },
+  colorInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  colorPreview: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  helperText: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginTop: 6,
+  },
+  previewSection: {
+    backgroundColor: "#FFFFFF",
+    padding: 20,
+    marginBottom: 12,
+  },
+  previewContainer: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 16,
+  },
+  previewButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  previewButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
   footer: {
     backgroundColor: "#FFFFFF",
