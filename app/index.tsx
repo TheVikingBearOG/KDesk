@@ -55,7 +55,10 @@ export default function DashboardScreen() {
     currentUserId: currentUserId,
   });
 
-  const statsQuery = trpc.tickets.getStats.useQuery();
+  const statsQuery = trpc.tickets.getStats.useQuery({
+    assignedToMe: true,
+    currentUserId: currentUserId,
+  });
 
   const stats = useMemo(() => {
     if (!statsQuery.data) {

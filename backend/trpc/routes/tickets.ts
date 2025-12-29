@@ -505,7 +505,20 @@ const mockTickets: Ticket[] = [
 ];
 
 export const ticketsRouter = createTRPCRouter({
-  getStats: publicProcedure.query(() => {
+  getStats: publicProcedure
+    .input(
+      z.object({
+        assignedToMe: z.boolean().optional(),
+        currentUserId: z.string().optional(),
+      }),
+    )
+    .query(({ input }) => {
+    let tickets = [...mockTickets];
+
+    if (input.assignedToMe && input.currentUserId) {
+      tickets = tickets.filter((t) => t.assignedToId === input.currentUserId);
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -521,12 +534,12 @@ export const ticketsRouter = createTRPCRouter({
       const nextDate = new Date(date);
       nextDate.setDate(nextDate.getDate() + 1);
       
-      const opened = mockTickets.filter(t => {
+      const opened = tickets.filter(t => {
         const createdDate = new Date(t.createdAt);
         return createdDate >= date && createdDate < nextDate;
       }).length;
       
-      const closed = mockTickets.filter(t => {
+      const closed = tickets.filter(t => {
         const updatedDate = new Date(t.updatedAt);
         return t.status === 'closed' && updatedDate >= date && updatedDate < nextDate;
       }).length;
@@ -539,12 +552,12 @@ export const ticketsRouter = createTRPCRouter({
     }
 
     return {
-      totalTickets: mockTickets.length,
-      totalOpen: mockTickets.filter(t => t.status === 'open').length,
-      totalClosed: mockTickets.filter(t => t.status === 'closed').length,
-      totalNew: mockTickets.filter(t => t.status === 'new').length,
-      totalPending: mockTickets.filter(t => t.status === 'pending').length,
-      totalSolved: mockTickets.filter(t => t.status === 'solved').length,
+      totalTickets: tickets.length,
+      totalOpen: tickets.filter(t => t.status === 'open').length,
+      totalClosed: tickets.filter(t => t.status === 'closed').length,
+      totalNew: tickets.filter(t => t.status === 'new').length,
+      totalPending: tickets.filter(t => t.status === 'pending').length,
+      totalSolved: tickets.filter(t => t.status === 'solved').length,
       dailyStats,
     };
   }),

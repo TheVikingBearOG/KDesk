@@ -17,7 +17,7 @@ type DateRange = 7 | 14 | 30;
 export default function StatisticsScreen() {
   const [selectedRange, setSelectedRange] = useState<DateRange>(7);
 
-  const statsQuery = trpc.tickets.getStats.useQuery();
+  const statsQuery = trpc.tickets.getStats.useQuery({});
 
   const filteredStats = useMemo(() => {
     if (!statsQuery.data?.dailyStats) return [];

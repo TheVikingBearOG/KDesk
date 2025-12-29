@@ -51,7 +51,7 @@ export default function TicketsScreen() {
     search: searchQuery,
   });
 
-  const statsQuery = trpc.tickets.getStats.useQuery();
+  const statsQuery = trpc.tickets.getStats.useQuery({});
 
   const stats = useMemo(() => {
     if (!statsQuery.data) {
