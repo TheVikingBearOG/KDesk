@@ -362,7 +362,8 @@ const createStyles = (colors: any) => StyleSheet.create({
     }),
   },
   logoSection: {
-    paddingVertical: 8,
+    paddingTop: 16,
+    paddingBottom: 8,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
