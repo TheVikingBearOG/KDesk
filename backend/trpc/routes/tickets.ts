@@ -71,6 +71,7 @@ const mockTickets: Ticket[] = [
     departmentId: "dept1",
     departmentName: "Technical Support",
     tags: ["login", "account"],
+    workOrderId: "24534",
     createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
     updatedAt: new Date(Date.now() - 30 * 60 * 1000),
     messages: [
@@ -194,6 +195,7 @@ const mockTickets: Ticket[] = [
     departmentId: "dept1",
     departmentName: "Technical Support",
     tags: ["bug"],
+    workOrderId: "24533",
     createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
     updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
     messages: [
@@ -288,6 +290,7 @@ const mockTickets: Ticket[] = [
     departmentId: "dept1",
     departmentName: "Technical Support",
     tags: ["security", "account"],
+    workOrderId: "24532",
     createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
     updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
     messages: [
@@ -320,6 +323,7 @@ const mockTickets: Ticket[] = [
     departmentId: "dept1",
     departmentName: "Technical Support",
     tags: ["upload", "bug"],
+    workOrderId: "24531",
     createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000),
     updatedAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
     messages: [
@@ -414,6 +418,7 @@ const mockTickets: Ticket[] = [
     departmentId: "dept1",
     departmentName: "Technical Support",
     tags: ["notifications", "email"],
+    workOrderId: "24530",
     createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
     updatedAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
     messages: [
@@ -446,6 +451,7 @@ const mockTickets: Ticket[] = [
     departmentId: "dept1",
     departmentName: "Technical Support",
     tags: ["export", "feature-request"],
+    workOrderId: "24529",
     createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
     updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
     messages: [
