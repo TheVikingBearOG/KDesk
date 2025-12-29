@@ -629,6 +629,23 @@ export const ticketsRouter = createTRPCRouter({
       return ticket;
     }),
 
+  updatePriority: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        priority: z.enum(["low", "normal", "high"]),
+      }),
+    )
+    .mutation(({ input }) => {
+      const ticket = mockTickets.find((t) => t.id === input.id);
+      if (!ticket) {
+        throw new Error("Ticket not found");
+      }
+      ticket.priority = input.priority;
+      ticket.updatedAt = new Date();
+      return ticket;
+    }),
+
   assignToTechnician: publicProcedure
     .input(
       z.object({

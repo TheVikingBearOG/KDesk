@@ -14,9 +14,10 @@ import {
 import { useLocalSearchParams } from "expo-router";
 import { Send, StickyNote, UserCircle, Building2, X, Briefcase, ExternalLink } from "lucide-react-native";
 import { trpc } from "@/lib/trpc";
-import type { Message, TicketStatus } from "@/backend/types/ticket";
+import type { Message, TicketStatus, TicketPriority } from "@/backend/types/ticket";
 
 const STATUS_OPTIONS: TicketStatus[] = ["new", "open", "pending", "solved", "closed"];
+const PRIORITY_OPTIONS: TicketPriority[] = ["low", "normal", "high"];
 
 const STATUS_COLORS: Record<TicketStatus, string> = {
   new: "#EF4444",
@@ -24,6 +25,12 @@ const STATUS_COLORS: Record<TicketStatus, string> = {
   pending: "#F59E0B",
   solved: "#10B981",
   closed: "#6B7280",
+};
+
+const PRIORITY_COLORS: Record<TicketPriority, string> = {
+  low: "#6B7280",
+  normal: "#3B82F6",
+  high: "#EF4444",
 };
 
 export default function TicketDetailScreen() {
@@ -42,6 +49,13 @@ export default function TicketDetailScreen() {
   const departmentsQuery = trpc.settings.listDepartments.useQuery();
   
   const updateStatusMutation = trpc.tickets.updateStatus.useMutation({
+    onSuccess: () => {
+      utils.tickets.get.invalidate({ id: id as string });
+      utils.tickets.list.invalidate();
+    },
+  });
+
+  const updatePriorityMutation = trpc.tickets.updatePriority.useMutation({
     onSuccess: () => {
       utils.tickets.get.invalidate({ id: id as string });
       utils.tickets.list.invalidate();
@@ -84,6 +98,10 @@ export default function TicketDetailScreen() {
 
   const handleStatusChange = (status: TicketStatus) => {
     updateStatusMutation.mutate({ id: id as string, status });
+  };
+
+  const handlePriorityChange = (priority: TicketPriority) => {
+    updatePriorityMutation.mutate({ id: id as string, priority });
   };
 
   const handleSendReply = () => {
@@ -247,6 +265,35 @@ export default function TicketDetailScreen() {
                   ]}
                 >
                   {status}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.prioritySection}>
+          <Text style={styles.sectionTitle}>Priority</Text>
+          <View style={styles.priorityButtons}>
+            {PRIORITY_OPTIONS.map((priority) => (
+              <TouchableOpacity
+                key={priority}
+                style={[
+                  styles.priorityButton,
+                  ticket.priority === priority && styles.priorityButtonActive,
+                  { borderColor: PRIORITY_COLORS[priority] },
+                  ticket.priority === priority && { backgroundColor: PRIORITY_COLORS[priority] + "15" },
+                ]}
+                onPress={() => handlePriorityChange(priority)}
+                disabled={updatePriorityMutation.isPending}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.priorityButtonText,
+                    ticket.priority === priority && { color: PRIORITY_COLORS[priority], fontWeight: "700" },
+                  ]}
+                >
+                  {priority}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -658,6 +705,34 @@ const styles = StyleSheet.create({
   },
   statusButtonText: {
     fontSize: 13,
+    fontWeight: "600",
+    color: "#6B7280",
+    textTransform: "capitalize",
+  },
+  prioritySection: {
+    backgroundColor: "#FFFFFF",
+    padding: 20,
+    marginTop: 12,
+  },
+  priorityButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  priorityButton: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#E5E7EB",
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+  },
+  priorityButtonActive: {
+    backgroundColor: "#F3F4F6",
+  },
+  priorityButtonText: {
+    fontSize: 14,
     fontWeight: "600",
     color: "#6B7280",
     textTransform: "capitalize",
