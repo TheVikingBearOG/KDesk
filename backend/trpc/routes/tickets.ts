@@ -780,4 +780,21 @@ export const ticketsRouter = createTRPCRouter({
       mockTickets.unshift(newTicket);
       return newTicket;
     }),
+
+  updateWorkOrder: publicProcedure
+    .input(
+      z.object({
+        ticketId: z.string(),
+        workOrderId: z.string().optional(),
+      }),
+    )
+    .mutation(({ input }) => {
+      const ticket = mockTickets.find((t) => t.id === input.ticketId);
+      if (!ticket) {
+        throw new Error("Ticket not found");
+      }
+      ticket.workOrderId = input.workOrderId;
+      ticket.updatedAt = new Date();
+      return ticket;
+    }),
 });

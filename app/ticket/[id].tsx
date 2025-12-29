@@ -11,7 +11,7 @@ import {
   Modal,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { Send, StickyNote, UserCircle, Building2, X } from "lucide-react-native";
+import { Send, StickyNote, UserCircle, Building2, X, Briefcase, ExternalLink } from "lucide-react-native";
 import { trpc } from "@/lib/trpc";
 import type { Message, TicketStatus } from "@/backend/types/ticket";
 
@@ -31,6 +31,8 @@ export default function TicketDetailScreen() {
   const [isInternalNote, setIsInternalNote] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [assignType, setAssignType] = useState<"technician" | "department">("technician");
+  const [showWorkOrderModal, setShowWorkOrderModal] = useState(false);
+  const [workOrderInput, setWorkOrderInput] = useState("");
   const currentUserId = "tech1";
 
   const utils = trpc.useUtils();
@@ -56,6 +58,15 @@ export default function TicketDetailScreen() {
   const assignToDepartmentMutation = trpc.tickets.assignToDepartment.useMutation({
     onSuccess: () => {
       setShowAssignModal(false);
+      utils.tickets.get.invalidate({ id: id as string });
+      utils.tickets.list.invalidate();
+    },
+  });
+
+  const updateWorkOrderMutation = trpc.tickets.updateWorkOrder.useMutation({
+    onSuccess: () => {
+      setShowWorkOrderModal(false);
+      setWorkOrderInput("");
       utils.tickets.get.invalidate({ id: id as string });
       utils.tickets.list.invalidate();
     },
@@ -98,6 +109,24 @@ export default function TicketDetailScreen() {
       departmentId,
       departmentName,
     });
+  };
+
+  const handleUpdateWorkOrder = () => {
+    updateWorkOrderMutation.mutate({
+      ticketId: id as string,
+      workOrderId: workOrderInput.trim() || undefined,
+    });
+  };
+
+  const openWorkOrder = () => {
+    if (ticket?.workOrderId) {
+      const url = `https://verk.kd.is/works/${ticket.workOrderId}`;
+      if (Platform.OS === "web") {
+        window.open(url, "_blank");
+      } else {
+        console.log("Opening URL:", url);
+      }
+    }
   };
 
   const formatTime = (date: Date) => {
@@ -262,6 +291,51 @@ export default function TicketDetailScreen() {
           </View>
         </View>
 
+        <View style={styles.workOrderSection}>
+          <Text style={styles.sectionTitle}>Work Order</Text>
+          <View style={styles.workOrderCard}>
+            <View style={styles.workOrderRow}>
+              <View style={styles.assignmentLabel}>
+                <Briefcase size={16} color="#6B7280" />
+                <Text style={styles.assignmentLabelText}>Work Order ID</Text>
+              </View>
+              {ticket.workOrderId ? (
+                <View style={styles.workOrderActions}>
+                  <TouchableOpacity
+                    style={styles.workOrderLink}
+                    onPress={openWorkOrder}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.workOrderLinkText}>#{ticket.workOrderId}</Text>
+                    <ExternalLink size={14} color="#3B82F6" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.workOrderEditButton}
+                    onPress={() => {
+                      setWorkOrderInput(ticket.workOrderId || "");
+                      setShowWorkOrderModal(true);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.workOrderEditText}>Edit</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={styles.assignmentValue}
+                  onPress={() => {
+                    setWorkOrderInput("");
+                    setShowWorkOrderModal(true);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.assignmentValueText}>Not Set</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </View>
+
         <View style={styles.messagesSection}>
           <Text style={styles.sectionTitle}>Conversation</Text>
           {ticket.messages.map((message) => renderMessage(message))}
@@ -406,6 +480,70 @@ export default function TicketDetailScreen() {
                 </>
               )}
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showWorkOrderModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowWorkOrderModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Work Order ID</Text>
+              <TouchableOpacity onPress={() => setShowWorkOrderModal(false)} activeOpacity={0.7}>
+                <X size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.workOrderModalContent}>
+              <Text style={styles.workOrderModalLabel}>Enter Work Order ID</Text>
+              <TextInput
+                style={styles.workOrderInput}
+                placeholder="e.g., 24534"
+                placeholderTextColor="#9CA3AF"
+                value={workOrderInput}
+                onChangeText={setWorkOrderInput}
+                keyboardType="default"
+                autoFocus
+              />
+              <Text style={styles.workOrderModalHint}>
+                Link: https://verk.kd.is/works/{workOrderInput || "[ID]"}
+              </Text>
+              <View style={styles.workOrderModalActions}>
+                {ticket?.workOrderId && (
+                  <TouchableOpacity
+                    style={styles.workOrderRemoveButton}
+                    onPress={() => {
+                      setWorkOrderInput("");
+                      handleUpdateWorkOrder();
+                    }}
+                    disabled={updateWorkOrderMutation.isPending}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.workOrderRemoveButtonText}>Remove</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={[
+                    styles.workOrderSaveButton,
+                    !workOrderInput.trim() && styles.workOrderSaveButtonDisabled,
+                  ]}
+                  onPress={handleUpdateWorkOrder}
+                  disabled={!workOrderInput.trim() || updateWorkOrderMutation.isPending}
+                  activeOpacity={0.7}
+                >
+                  {updateWorkOrderMutation.isPending ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.workOrderSaveButtonText}>Save</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
         </View>
       </Modal>
@@ -746,5 +884,109 @@ const styles = StyleSheet.create({
   },
   modalItemUnassign: {
     color: "#EF4444",
+  },
+  workOrderSection: {
+    backgroundColor: "#FFFFFF",
+    padding: 20,
+    marginTop: 12,
+  },
+  workOrderCard: {
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    padding: 16,
+  },
+  workOrderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  workOrderActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  workOrderLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#EFF6FF",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#3B82F6",
+  },
+  workOrderLinkText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#3B82F6",
+  },
+  workOrderEditButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  workOrderEditText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#6B7280",
+  },
+  workOrderModalContent: {
+    padding: 20,
+  },
+  workOrderModalLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 8,
+  },
+  workOrderInput: {
+    backgroundColor: "#F9FAFB",
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 15,
+    color: "#1F2937",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    marginBottom: 8,
+  },
+  workOrderModalHint: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginBottom: 20,
+  },
+  workOrderModalActions: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  workOrderRemoveButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: "#FEE2E2",
+    alignItems: "center",
+  },
+  workOrderRemoveButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#EF4444",
+  },
+  workOrderSaveButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: "#3B82F6",
+    alignItems: "center",
+  },
+  workOrderSaveButtonDisabled: {
+    opacity: 0.5,
+  },
+  workOrderSaveButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
 });

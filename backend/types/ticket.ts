@@ -41,6 +41,7 @@ export interface Ticket {
   departmentId?: string;
   departmentName?: string;
   tags: string[];
+  workOrderId?: string;
   createdAt: Date;
   updatedAt: Date;
   messages: Message[];
