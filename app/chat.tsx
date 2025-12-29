@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Hash, Send, Users, ChevronLeft, Menu, Ticket, Plus, X } from "lucide-react-native";
 import { trpc } from "@/lib/trpc";
-import type { ChatChannel, ChatMessage, TaggableUser } from "@/backend/types/chat";
+import type { ChatChannel, ChatMessage, TaggableUser, TaggableDepartment } from "@/backend/types/chat";
 import type { Ticket as TicketType } from "@/backend/types/ticket";
 import { useBranding } from "@/contexts/BrandingContext";
 
@@ -55,6 +55,14 @@ export default function ChatScreen() {
   );
 
   const usersQuery = trpc.chat.getUsersForTagging.useQuery(
+    { query: mentionQuery },
+    { 
+      staleTime: 0,
+      refetchInterval: 5000
+    }
+  );
+
+  const departmentsForTaggingQuery = trpc.chat.getDepartmentsForTagging.useQuery(
     { query: mentionQuery },
     { 
       staleTime: 0,
@@ -122,21 +130,30 @@ export default function ChatScreen() {
     }
   }, [selectedChannelId, messagesQuery.data]);
 
-  const extractMentions = (text: string): string[] => {
+  const extractMentions = (text: string): { userIds: string[], departmentIds: string[] } => {
     const mentionPattern = /@([\w\s]+?)(?=\s|$|[^\w\s])/g;
-    const mentions: string[] = [];
+    const userIds: string[] = [];
+    const departmentIds: string[] = [];
     const users = usersQuery.data || [];
+    const departments = departmentsForTaggingQuery.data || [];
     
     let match;
     while ((match = mentionPattern.exec(text)) !== null) {
       const mentionedName = match[1].trim();
+      
+      const department = departments.find((d) => d.name.toLowerCase() === mentionedName.toLowerCase());
+      if (department) {
+        departmentIds.push(department.id);
+        continue;
+      }
+      
       const user = users.find((u) => u.name.toLowerCase() === mentionedName.toLowerCase());
       if (user) {
-        mentions.push(user.id);
+        userIds.push(user.id);
       }
     }
     
-    return mentions;
+    return { userIds, departmentIds };
   };
 
   const extractTicketReferences = (text: string): string[] => {
@@ -189,14 +206,14 @@ export default function ChatScreen() {
     setShowTickets(false);
   };
 
-  const handleMentionSelect = (user: TaggableUser) => {
+  const handleMentionSelect = (item: TaggableUser | TaggableDepartment) => {
     const beforeCursor = messageText.substring(0, cursorPosition);
     const lastAtIndex = beforeCursor.lastIndexOf("@");
     if (lastAtIndex !== -1) {
       const beforeMention = messageText.substring(0, lastAtIndex);
       const afterMention = messageText.substring(cursorPosition);
-      const newText = `${beforeMention}@${user.name} ${afterMention}`;
-      const newCursorPos = lastAtIndex + user.name.length + 2;
+      const newText = `${beforeMention}@${item.name} ${afterMention}`;
+      const newCursorPos = lastAtIndex + item.name.length + 2;
       setMessageText(newText);
       setCursorPosition(newCursorPos);
       setShowMentions(false);
@@ -224,12 +241,13 @@ export default function ChatScreen() {
 
   const handleSendMessage = () => {
     if (messageText.trim() && selectedChannelId) {
-      const mentions = extractMentions(messageText);
+      const { userIds, departmentIds } = extractMentions(messageText);
       const ticketReferences = extractTicketReferences(messageText);
       sendMessageMutation.mutate({
         channelId: selectedChannelId,
         content: messageText.trim(),
-        mentions: mentions.length > 0 ? mentions : undefined,
+        mentions: userIds.length > 0 ? userIds : undefined,
+        departmentMentions: departmentIds.length > 0 ? departmentIds : undefined,
         ticketReferences: ticketReferences.length > 0 ? ticketReferences : undefined,
         userId: currentUser.id,
         userName: currentUser.name,
@@ -255,6 +273,7 @@ export default function ChatScreen() {
     const parts = [];
     let lastIndex = 0;
     let match: RegExpExecArray | null;
+    const departments = departmentsForTaggingQuery.data || [];
 
     while ((match = combinedPattern.exec(content)) !== null) {
       if (match.index > lastIndex) {
@@ -266,8 +285,19 @@ export default function ChatScreen() {
       }
       
       if (match[0].startsWith("@")) {
+        const mentionName = match[0].substring(1).trim();
+        const isDepartment = departments.some((d) => d.name.toLowerCase() === mentionName.toLowerCase());
+        
         parts.push(
-          <Text key={`mention-${match.index}`} style={[styles.mention, { color: colors.primaryColor, backgroundColor: colors.primaryColor + '20' }]}>
+          <Text 
+            key={`mention-${match.index}`} 
+            style={[
+              styles.mention, 
+              isDepartment 
+                ? { color: "#8B5CF6", backgroundColor: "#EDE9FE" }
+                : { color: colors.primaryColor, backgroundColor: colors.primaryColor + '20' }
+            ]}
+          >
             {match[0]}
           </Text>
         );
@@ -348,21 +378,31 @@ export default function ChatScreen() {
     );
   };
 
-  const renderMentionSuggestion = ({ item }: { item: TaggableUser }) => (
-    <TouchableOpacity
-      style={[styles.mentionItem, { borderBottomColor: colors.border }]}
-      onPress={() => handleMentionSelect(item)}
-      activeOpacity={0.7}
-    >
-      <View style={[styles.mentionUserIcon, { backgroundColor: colors.primaryColor }]}>
-        <Text style={styles.mentionUserInitial}>{item.name.charAt(0).toUpperCase()}</Text>
-      </View>
-      <View style={styles.mentionUserInfo}>
-        <Text style={[styles.mentionUserName, { color: colors.textPrimary }]}>{item.name}</Text>
-        <Text style={[styles.mentionUserRole, { color: colors.textSecondary }]}>{item.role}</Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const renderMentionSuggestion = ({ item }: { item: TaggableUser | TaggableDepartment }) => {
+    const isDepartment = 'type' in item && item.type === 'department';
+    
+    return (
+      <TouchableOpacity
+        style={[styles.mentionItem, { borderBottomColor: colors.border }]}
+        onPress={() => handleMentionSelect(item)}
+        activeOpacity={0.7}
+      >
+        <View style={[styles.mentionUserIcon, { backgroundColor: isDepartment ? "#8B5CF6" : colors.primaryColor }]}>
+          {isDepartment ? (
+            <Users size={18} color="#fff" />
+          ) : (
+            <Text style={styles.mentionUserInitial}>{item.name.charAt(0).toUpperCase()}</Text>
+          )}
+        </View>
+        <View style={styles.mentionUserInfo}>
+          <Text style={[styles.mentionUserName, { color: colors.textPrimary }]}>{item.name}</Text>
+          <Text style={[styles.mentionUserRole, { color: colors.textSecondary }]}>
+            {isDepartment ? `Department • ${item.userCount} ${item.userCount === 1 ? 'member' : 'members'}` : (item as TaggableUser).role}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const renderTicketSuggestion = ({ item }: { item: TicketType }) => (
     <TouchableOpacity
@@ -393,10 +433,13 @@ export default function ChatScreen() {
 
   const renderInputArea = () => (
     <>
-      {showMentions && usersQuery.data && usersQuery.data.length > 0 && (
+      {showMentions && (
         <View style={[styles.mentionsDropdown, { backgroundColor: colors.cardBackground, borderTopColor: colors.border }]}>
           <FlatList
-            data={usersQuery.data}
+            data={[
+              ...(departmentsForTaggingQuery.data || []),
+              ...(usersQuery.data || [])
+            ]}
             renderItem={renderMentionSuggestion}
             keyExtractor={(item) => item.id}
             keyboardShouldPersistTaps="handled"

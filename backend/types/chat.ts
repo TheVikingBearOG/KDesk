@@ -20,6 +20,7 @@ export interface ChatMessage {
   editedAt?: string;
   attachments?: ChatAttachment[];
   mentions?: string[];
+  departmentMentions?: string[];
   ticketReferences?: string[];
 }
 
@@ -38,6 +39,13 @@ export interface TaggableUser {
   email: string;
 }
 
+export interface TaggableDepartment {
+  id: string;
+  name: string;
+  type: "department";
+  userCount: number;
+}
+
 export type CreateChannelInput = {
   name: string;
   department: string;
@@ -51,6 +59,7 @@ export type SendMessageInput = {
   content: string;
   attachments?: ChatAttachment[];
   mentions?: string[];
+  departmentMentions?: string[];
   ticketReferences?: string[];
 };
 
