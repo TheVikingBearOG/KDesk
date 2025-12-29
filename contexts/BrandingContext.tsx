@@ -54,10 +54,13 @@ const themes: Record<ThemeType, ThemeColors> = {
 };
 
 export const [BrandingProvider, useBranding] = createContextHook(() => {
-  const brandingQuery = trpc.settings.getBranding.useQuery();
   const [branding, setBranding] = useState<BrandingConfig>({
     companyName: "KDesk",
     theme: "light",
+  });
+  
+  const brandingQuery = trpc.settings.getBranding.useQuery(undefined, {
+    enabled: true,
   });
 
   useEffect(() => {

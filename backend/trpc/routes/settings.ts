@@ -230,4 +230,44 @@ export const settingsRouter = createTRPCRouter({
       staff.mustChangePassword = false;
       return { success: true };
     }),
+
+  login: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        password: z.string(),
+      }),
+    )
+    .mutation(({ input }) => {
+      const staff = mockStaff.find((s) => s.id === input.userId);
+      if (!staff) {
+        throw new Error("Invalid user ID or password");
+      }
+      if (staff.password !== input.password) {
+        throw new Error("Invalid user ID or password");
+      }
+      return {
+        id: staff.id,
+        name: staff.name,
+        email: staff.email,
+        role: staff.role === "admin" ? "Administrator" : "Staff",
+        mustChangePassword: staff.mustChangePassword,
+      };
+    }),
+
+  getUser: publicProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(({ input }) => {
+      const staff = mockStaff.find((s) => s.id === input.userId);
+      if (!staff) {
+        return null;
+      }
+      return {
+        id: staff.id,
+        name: staff.name,
+        email: staff.email,
+        role: staff.role === "admin" ? "Administrator" : "Staff",
+        mustChangePassword: staff.mustChangePassword,
+      };
+    }),
 });
