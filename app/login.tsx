@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { User, Mail, Lock, LogIn } from "lucide-react-native";
+import { User, Lock, LogIn } from "lucide-react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBranding } from "@/contexts/BrandingContext";
 
@@ -22,19 +22,17 @@ export default function LoginScreen() {
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   
   const [userId, setUserId] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignIn = async () => {
-    if (!userId.trim() || !name.trim() || !email.trim() || !role.trim()) {
+    if (!userId.trim() || !password.trim()) {
       return;
     }
 
     setIsLoading(true);
     try {
-      await signIn(userId.trim(), name.trim(), email.trim(), role.trim());
+      await signIn(userId.trim(), password.trim());
       router.replace("/");
     } catch (error) {
       console.error("Sign in error:", error);
@@ -47,12 +45,11 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       const users = {
-        admin: { id: "admin1", name: "Admin User", email: "admin@company.com", role: "Administrator" },
-        tech: { id: "tech1", name: "Tech Support", email: "tech@company.com", role: "Technician" },
-        agent: { id: "agent1", name: "Agent Smith", email: "agent@company.com", role: "Support Agent" },
+        admin: "admin1",
+        tech: "tech1",
+        agent: "agent1",
       };
-      const user = users[userType];
-      await signIn(user.id, user.name, user.email, user.role);
+      await signIn(users[userType], "password");
       router.replace("/");
     } catch (error) {
       console.error("Sign in error:", error);
@@ -91,48 +88,24 @@ export default function LoginScreen() {
             </View>
 
             <View style={styles.inputWrapper}>
-              <User size={20} color={colors.textSecondary} />
-              <TextInput
-                style={styles.input}
-                placeholder="Full Name"
-                placeholderTextColor={colors.textSecondary}
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-              />
-            </View>
-
-            <View style={styles.inputWrapper}>
-              <Mail size={20} color={colors.textSecondary} />
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor={colors.textSecondary}
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                autoCorrect={false}
-              />
-            </View>
-
-            <View style={styles.inputWrapper}>
               <Lock size={20} color={colors.textSecondary} />
               <TextInput
                 style={styles.input}
-                placeholder="Role (e.g., Administrator, Agent)"
+                placeholder="Password"
                 placeholderTextColor={colors.textSecondary}
-                value={role}
-                onChangeText={setRole}
-                autoCapitalize="words"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
               />
             </View>
           </View>
 
           <TouchableOpacity
-            style={[styles.signInButton, (!userId.trim() || !name.trim() || !email.trim() || !role.trim()) && styles.signInButtonDisabled]}
+            style={[styles.signInButton, (!userId.trim() || !password.trim()) && styles.signInButtonDisabled]}
             onPress={handleSignIn}
-            disabled={isLoading || !userId.trim() || !name.trim() || !email.trim() || !role.trim()}
+            disabled={isLoading || !userId.trim() || !password.trim()}
             activeOpacity={0.8}
           >
             {isLoading ? (
