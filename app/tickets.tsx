@@ -48,16 +48,20 @@ export default function TicketsScreen() {
     search: searchQuery,
   });
 
+  const statsQuery = trpc.tickets.getStats.useQuery();
+
   const stats = useMemo(() => {
-    const tickets = ticketsQuery.data || [];
+    if (!statsQuery.data) {
+      return { new: 0, open: 0, pending: 0, solved: 0, closed: 0 };
+    }
     return {
-      new: tickets.filter(t => t.status === "new").length,
-      open: tickets.filter(t => t.status === "open").length,
-      pending: tickets.filter(t => t.status === "pending").length,
-      solved: tickets.filter(t => t.status === "solved").length,
-      closed: tickets.filter(t => t.status === "closed").length,
+      new: statsQuery.data.totalNew,
+      open: statsQuery.data.totalOpen,
+      pending: statsQuery.data.totalPending,
+      solved: statsQuery.data.totalSolved,
+      closed: statsQuery.data.totalClosed,
     };
-  }, [ticketsQuery.data]);
+  }, [statsQuery.data]);
 
   const formatTime = (date: Date) => {
     const now = new Date();
