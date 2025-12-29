@@ -42,6 +42,10 @@ export default function SettingsScreen() {
   const [companyName, setCompanyName] = useState("");
   const [primaryColor, setPrimaryColor] = useState("");
   const [accentColor, setAccentColor] = useState("");
+  const [backgroundColor, setBackgroundColor] = useState("");
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [activeColorField, setActiveColorField] = useState<"primary" | "accent" | "background" | null>(null);
+  const [tempColor, setTempColor] = useState("");
 
   const utils = trpc.useUtils();
   const configQuery = trpc.settings.getMailboxConfig.useQuery();
@@ -127,6 +131,7 @@ export default function SettingsScreen() {
       setCompanyName(brandingQuery.data.companyName);
       setPrimaryColor(brandingQuery.data.primaryColor);
       setAccentColor(brandingQuery.data.accentColor);
+      setBackgroundColor(brandingQuery.data.backgroundColor);
     }
   }, [brandingQuery.data]);
 
@@ -181,7 +186,7 @@ export default function SettingsScreen() {
   };
 
   const handleSaveBranding = () => {
-    if (!companyName || !primaryColor || !accentColor) {
+    if (!companyName || !primaryColor || !accentColor || !backgroundColor) {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
@@ -189,8 +194,30 @@ export default function SettingsScreen() {
       companyName,
       primaryColor,
       accentColor,
+      backgroundColor,
     });
   };
+
+  const openColorPicker = (field: "primary" | "accent" | "background") => {
+    setActiveColorField(field);
+    if (field === "primary") setTempColor(primaryColor);
+    else if (field === "accent") setTempColor(accentColor);
+    else setTempColor(backgroundColor);
+    setShowColorPicker(true);
+  };
+
+  const saveColor = () => {
+    if (activeColorField === "primary") setPrimaryColor(tempColor);
+    else if (activeColorField === "accent") setAccentColor(tempColor);
+    else if (activeColorField === "background") setBackgroundColor(tempColor);
+    setShowColorPicker(false);
+  };
+
+  const predefinedColors = [
+    "#3B82F6", "#10B981", "#EF4444", "#F59E0B",
+    "#8B5CF6", "#EC4899", "#06B6D4", "#84CC16",
+    "#1F2937", "#6B7280", "#F9FAFB", "#FFFFFF",
+  ];
 
   if (configQuery.isLoading) {
     return (
@@ -514,7 +541,11 @@ export default function SettingsScreen() {
                     onChangeText={setPrimaryColor}
                     autoCapitalize="none"
                   />
-                  <View style={[styles.colorPreview, { backgroundColor: primaryColor || "#3B82F6" }]} />
+                  <TouchableOpacity
+                    style={[styles.colorPreview, { backgroundColor: primaryColor || "#3B82F6" }]}
+                    onPress={() => openColorPicker("primary")}
+                    activeOpacity={0.7}
+                  />
                 </View>
                 <Text style={styles.helperText}>Used for buttons, links, and primary actions</Text>
               </View>
@@ -530,9 +561,33 @@ export default function SettingsScreen() {
                     onChangeText={setAccentColor}
                     autoCapitalize="none"
                   />
-                  <View style={[styles.colorPreview, { backgroundColor: accentColor || "#10B981" }]} />
+                  <TouchableOpacity
+                    style={[styles.colorPreview, { backgroundColor: accentColor || "#10B981" }]}
+                    onPress={() => openColorPicker("accent")}
+                    activeOpacity={0.7}
+                  />
                 </View>
                 <Text style={styles.helperText}>Used for success states and accents</Text>
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>Background Color</Text>
+                <View style={styles.colorInputContainer}>
+                  <TextInput
+                    style={[styles.input, { flex: 1 }]}
+                    placeholder="#F9FAFB"
+                    placeholderTextColor="#9CA3AF"
+                    value={backgroundColor}
+                    onChangeText={setBackgroundColor}
+                    autoCapitalize="none"
+                  />
+                  <TouchableOpacity
+                    style={[styles.colorPreview, { backgroundColor: backgroundColor || "#F9FAFB" }]}
+                    onPress={() => openColorPicker("background")}
+                    activeOpacity={0.7}
+                  />
+                </View>
+                <Text style={styles.helperText}>Main background color for the app</Text>
               </View>
             </View>
 
@@ -761,6 +816,66 @@ export default function SettingsScreen() {
                 ) : (
                   <Text style={styles.modalButtonText}>Create Department</Text>
                 )}
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showColorPicker}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowColorPicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Choose Color</Text>
+              <TouchableOpacity onPress={() => setShowColorPicker(false)} activeOpacity={0.7}>
+                <X size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              <View style={styles.field}>
+                <Text style={styles.label}>Hex Color</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="#3B82F6"
+                  placeholderTextColor="#9CA3AF"
+                  value={tempColor}
+                  onChangeText={setTempColor}
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.colorPreviewLarge}>
+                <View style={[styles.colorPreviewFull, { backgroundColor: tempColor || "#FFFFFF" }]} />
+              </View>
+
+              <Text style={styles.label}>Quick Presets</Text>
+              <View style={styles.colorGrid}>
+                {predefinedColors.map((color) => (
+                  <TouchableOpacity
+                    key={color}
+                    style={[
+                      styles.colorGridItem,
+                      { backgroundColor: color },
+                      tempColor === color && styles.colorGridItemActive,
+                    ]}
+                    onPress={() => setTempColor(color)}
+                    activeOpacity={0.7}
+                  />
+                ))}
+              </View>
+
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: branding.primaryColor }]}
+                onPress={saveColor}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.modalButtonText}>Apply Color</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
@@ -1051,5 +1166,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+  colorPreviewLarge: {
+    marginBottom: 20,
+  },
+  colorPreviewFull: {
+    height: 120,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  colorGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    marginTop: 12,
+    marginBottom: 20,
+  },
+  colorGridItem: {
+    width: 60,
+    height: 60,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  colorGridItemActive: {
+    borderColor: "#3B82F6",
+    borderWidth: 3,
   },
 });

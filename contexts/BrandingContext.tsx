@@ -6,6 +6,7 @@ interface BrandingConfig {
   companyName: string;
   primaryColor: string;
   accentColor: string;
+  backgroundColor: string;
 }
 
 export const [BrandingProvider, useBranding] = createContextHook(() => {
@@ -14,6 +15,7 @@ export const [BrandingProvider, useBranding] = createContextHook(() => {
     companyName: "KDesk",
     primaryColor: "#3B82F6",
     accentColor: "#10B981",
+    backgroundColor: "#F9FAFB",
   });
 
   useEffect(() => {

@@ -22,12 +22,14 @@ interface BrandingConfig {
   companyName: string;
   primaryColor: string;
   accentColor: string;
+  backgroundColor: string;
 }
 
 const mockBranding: BrandingConfig = {
   companyName: "KDesk",
   primaryColor: "#3B82F6",
   accentColor: "#10B981",
+  backgroundColor: "#F9FAFB",
 };
 
 const mockDepartments: Department[] = [
@@ -195,6 +197,7 @@ export const settingsRouter = createTRPCRouter({
         companyName: z.string(),
         primaryColor: z.string(),
         accentColor: z.string(),
+        backgroundColor: z.string(),
       }),
     )
     .mutation(({ input }) => {
